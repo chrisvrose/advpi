@@ -2,6 +2,6 @@
     "files.associations": {
         "*.json": "jsonc",
         "*.rmd": "markdown",
-        "unistd.h": "c"
-    }
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

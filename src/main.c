@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "intelstub.h"
+#include "util.h"
 
 typedef struct GameboyKvmVM {
     int kvmFd;
@@ -20,7 +21,7 @@ typedef struct GameboyKvmVM {
 int main(int, char**) {
     printf("Hello, from advpi!\n");
     int k = open("/dev/kvm", O_RDWR);
-    if(k==-1){
+    if (k <= 0) {
         printf("Failed to open kvm \n");
         return 1;
     }
@@ -37,8 +38,12 @@ int main(int, char**) {
     }
 
     void* physicalMemory = mmap(0, 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC,
-                                MAP_SHARED, 0, 0);
-    initmemory(physicalMemory);
+                                MAP_SHARED | MAP_ANONYMOUS, 0, 0);
+    if (physicalMemory == MAP_FAILED) {
+        printf("mmap of physical memory failed\n");
+        goto closeGoto;
+    }
+    initmemory(physicalMemory, INTEL_CODE, sizeof(INTEL_CODE));
 
     if (!physicalMemory) {
         printf("Could not create memory");
@@ -75,18 +80,18 @@ int main(int, char**) {
         mmap(NULL, vcpuDetailsSize, PROT_READ | PROT_WRITE, MAP_SHARED,
              gameboyKvmVM.vcpuFd, 0);
 
-    struct kvm_sregs s;
+    // struct kvm_sregs s;
     // ioctl(gameboyKvmVM.vcpuFd, KVM_GET_SREGS, &s);
     // s.
     // s.cs.base = 0;
     // s.cs.selector = 0;
     // ioctl(gameboyKvmVM.vcpuFd, KVM_SET_SREGS, &s);
 
-    struct kvm_regs regs = {
-        .regs.pc=0x1000,
-        .,
-    };
-    int setArgs = ioctl(gameboyKvmVM.vcpuFd, KVM_SET_REGS, &regs);
+    //    struct kvm_regs regs = {
+    //      .regs.pc=0x1000,
+    //        .,
+    //  };
+    //  int setArgs = ioctl(gameboyKvmVM.vcpuFd, KVM_SET_REGS, &regs);
 
     // bool loopingCpu = true;
     // while (loopingCpu) {
@@ -111,14 +116,13 @@ int main(int, char**) {
     //             break;
     //         case KVM_EXIT_IO:
     //             if (vcpuKvmRun->io.direction == KVM_EXIT_IO_OUT &&
-    //                 vcpuKvmRun->io.size == 1 && vcpuKvmRun->io.port == 0x3f8 &&
-    //                 vcpuKvmRun->io.count == 1)
-    //                 putchar(
+    //                 vcpuKvmRun->io.size == 1 && vcpuKvmRun->io.port == 0x3f8
+    //                 && vcpuKvmRun->io.count == 1) putchar(
     //                     *(((char*)vcpuKvmRun) + vcpuKvmRun->io.data_offset));
     //             else
     //                 errx(1, "unhandled KVM_EXIT_IO");
     //             break;
-            
+
     //         default:
     //             printf("Why did we exit?");
     //     }
