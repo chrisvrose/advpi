@@ -31,12 +31,17 @@
 
 ### What I did
 
-- got
+- Setup the rpi.
+- Can open kvm.
 - found a53 reference manual - https://developer.arm.com/documentation/ddi0500/j/BABHJJBC
 
 #### What's good
 
+- No special registers. Makes things easier.
+- Mmaps work just as good as they did.
+
 #### What's bad
 
+- I have no idea how to set registers in aarch64 kvm. Ref - https://github.com/Lenz-K/arm64-kvm-hello-world/blob/main/kvm_test.cpp
 
 ### What's next
