@@ -37,6 +37,7 @@
 - Can open kvm.
 - found a53 reference manual - https://developer.arm.com/documentation/ddi0500/j/BABHJJBC
 - Main reference: https://github.com/torvalds/linux/blob/master/Documentation/virt/kvm/api.rst
+- hello world ref: https://github.com/Lenz-K/arm64-kvm-hello-world/blob/main/kvm_test.cpp#L62
 
 #### What's good
 
