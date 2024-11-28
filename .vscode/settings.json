@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.json": "jsonc",
-        "*.rmd": "markdown",
-    },
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
-}

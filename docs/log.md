@@ -29,9 +29,11 @@
 
 ## Week 2
 
+25/11/24 - 01/12/24
+
 ### What I did
 
-- Setup the rpi.
+- RPi 02w setup.
 - Can open kvm.
 - found a53 reference manual - https://developer.arm.com/documentation/ddi0500/j/BABHJJBC
 
@@ -39,9 +41,14 @@
 
 - No special registers. Makes things easier.
 - Mmaps work just as good as they did.
+- Can execute code.
+  - Useful tool to generate ARM binary snippets: https://armconverter.com
+- Can do MMIO.
 
 #### What's bad
 
-- I have no idea how to set registers in aarch64 kvm. Ref - https://github.com/Lenz-K/arm64-kvm-hello-world/blob/main/kvm_test.cpp
+- Wasted time in setting r15 register. Used https://github.com/kvmtool/kvmtool/blob/master/arm/aarch64/kvm-cpu.c#L30, and just setting PC in arm64 is good.
+- From KVM, I can set these register values by just using the arm64 x0-x15 as required.
+- BRK is useless. Rather, just attempt to fetch a useless instruction.
 
 ### What's next
