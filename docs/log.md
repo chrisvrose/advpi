@@ -14,8 +14,8 @@
 
 #### What's bad
 
-- i just realised opc doesn't have nested kvm. Can't test
-- can't extend to sm83 in gameboy.
+- opc doesn't have nested kvm. Can't test.
+- can't extend to sm83 in gameboy. Instruction sets are too different.
 
 ### What's next
 
@@ -33,7 +33,7 @@
 
 ### What I did
 
-- RPi 02w setup.
+- RPi 02w setup. Zed>>VSCode as less memory usage.
 - Can open kvm.
 - found a53 reference manual - https://developer.arm.com/documentation/ddi0500/j/BABHJJBC
 
@@ -43,12 +43,12 @@
 - Mmaps work just as good as they did.
 - Can execute code.
   - Useful tool to generate ARM binary snippets: https://armconverter.com
-- Can do MMIO.
+- Can do MMIO. Note: R15 is 0 when faulting.
 
 #### What's bad
 
-- Wasted time in setting r15 register. Used https://github.com/kvmtool/kvmtool/blob/master/arm/aarch64/kvm-cpu.c#L30, and just setting PC in arm64 is good.
-- From KVM, I can set these register values by just using the arm64 x0-x15 as required.
+- Wasted time in setting r15 register. Referred this good example after hours of search - https://github.com/kvmtool/kvmtool/blob/master/arm/aarch64/kvm-cpu.c#L30, and just setting PC in arm64 is good.
+- From KVM, I can set these register values by just using the arm64 x0-x15 as required. (I think?)
 - BRK is useless. Rather, just attempt to fetch a useless instruction.
 
 ### What's next
