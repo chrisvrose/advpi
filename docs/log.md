@@ -36,6 +36,7 @@
 - RPi 02w setup. Zed>>VSCode as less memory usage.
 - Can open kvm.
 - found a53 reference manual - https://developer.arm.com/documentation/ddi0500/j/BABHJJBC
+- Main reference: https://github.com/torvalds/linux/blob/master/Documentation/virt/kvm/api.rst
 
 #### What's good
 
