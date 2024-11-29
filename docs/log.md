@@ -46,6 +46,7 @@
 - Can execute code.
   - Useful tool to generate ARM binary snippets: https://armconverter.com
 - Can do MMIO. Note: R15 is 0 when faulting.
+- Learned debug mode after all this: https://github.com/kvmtool/kvmtool/blob/b48735e5d562eaffb96cf98a91da212176f1534c/kvm-cpu.c#L26
 
 #### What's bad
 
