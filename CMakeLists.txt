@@ -11,4 +11,5 @@ include_directories(include)
 add_executable(advpi
 src/main.c
 src/arm_code.c
+src/gba_memory.c
 )

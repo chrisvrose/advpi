@@ -1,7 +1,7 @@
 
 #include "main.h"
 #include <err.h>
-#include<errno.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <linux/kvm.h>
 #include <stdbool.h>
