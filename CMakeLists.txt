@@ -10,6 +10,7 @@ include_directories(include)
 
 add_executable(advpi
 src/main.c
+src/kvm_utils.c
 src/arm_code.c
 src/gba_memory.c
 )
