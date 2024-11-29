@@ -47,7 +47,7 @@ int main(int, char**) {
         printf("mmap of physical memory failed\n");
         goto closeGoto;
     }
-    initmemory(physicalMemory, CODE, sizeof(CODE));
+    initmemory(physicalMemory, CODE, CODE_LENGTH);
 
     if (!physicalMemory) {
         printf("Could not create memory");
