@@ -10,15 +10,15 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
 #include "arm_code.h"
 #include "gba_memory.h"
-#include "util.h"
 #include "kvm_utils.h"
 
 typedef struct GameboyKvmVM {
     int kvmFd;
     int vmFd;
-    void* guestMemory;
+    struct GBAMemory guestMemory;
     int vcpuFd;
     uint64_t initialPcRegister;
 } GameboyKvmVM;
@@ -41,28 +41,24 @@ int main(int, char**) {
         printf("Could not create VM");
         goto CLOSE_GOTO;
     }
-    void* physicalMemory = mmap(0, 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC,
-                                MAP_SHARED | MAP_ANONYMOUS, 0, 0);
-    if (physicalMemory == MAP_FAILED) {
-        printf("mmap of physical memory failed\n");
-        goto CLOSE_GOTO;
-    }
-    initmemory(physicalMemory, CODE, CODE_LENGTH);
 
-    if (!physicalMemory) {
-        printf("Could not create memory");
+    // memory
+    struct GBAMemory memory = GBAMemory_init();
+    if (memory.physicalMemorySize == 0) {
         goto CLOSE_GOTO;
     }
+    GBAMemory_copy(&memory, CODE, CODE_LENGTH);
 
     GameboyKvmVM gameboyKvmVM = {.kvmFd = k,
                                  .vmFd = vmfd,
-                                 .guestMemory = physicalMemory,
+                                 .guestMemory = memory,
                                  .initialPcRegister = 0x1000};
 
     // allocate memory
     struct kvm_userspace_memory_region memory_region = {
         .slot = 0,
-        .userspace_addr = (unsigned long long)gameboyKvmVM.guestMemory,
+        .userspace_addr =
+            (unsigned long long)gameboyKvmVM.guestMemory.physicalMemory,
         .guest_phys_addr = 0x1000,
         .memory_size = 0x1000};
     int memorySetRequest =
@@ -71,8 +67,6 @@ int main(int, char**) {
         perror("Failed to set memory");
         goto CLOSE_GOTO;
     }
-
-    // ioctl(gameboyKvmVM.vmFd, KVM_ARM_)
 
     // allocate cpu
     int cpuFd = ioctl(gameboyKvmVM.vmFd, KVM_CREATE_VCPU, 0);
@@ -143,29 +137,28 @@ int main(int, char**) {
                 loopingCpu = false;
                 break;
             case KVM_EXIT_IO:
-                if (vcpuKvmRun->io.direction == KVM_EXIT_IO_OUT &&
-                    vcpuKvmRun->io.size == 1 && vcpuKvmRun->io.port == 0x3f8 &&
-                    vcpuKvmRun->io.count == 1)
-                    putchar(
-                        *(((char*)vcpuKvmRun) + vcpuKvmRun->io.data_offset));
-                else
-                    errx(1, "unhandled KVM_EXIT_IO");
+                // if (vcpuKvmRun->io.direction == KVM_EXIT_IO_OUT &&
+                //     vcpuKvmRun->io.size == 1 && vcpuKvmRun->io.port == 0x3f8
+                //     && vcpuKvmRun->io.count == 1) putchar(
+                //         *(((char*)vcpuKvmRun) + vcpuKvmRun->io.data_offset));
+                // else
+                errx(1, "unhandled KVM_EXIT_IO");
                 break;
             case KVM_EXIT_MMIO:
                 printf("Attempted mmio\n");
 
-                {
-                    for(int r = 0;r<16;r++)
-                    printf("Got Registers: %d(%ld)\n",r,getRegisterValue(gameboyKvmVM.vcpuFd,r));
-                }
+                for (int r = 0; r < 16; r++){
+                    printf("Got Registers: %d(%ld)\n", r,
+                           getRegisterValue(gameboyKvmVM.vcpuFd, r));}
 
                 break;
             default:
-                printf("Why did we exit?, exit reason %d\n",vcpuKvmRun->exit_reason);
+                printf("Why did we exit?, exit reason %d\n",
+                       vcpuKvmRun->exit_reason);
         }
     }
 
-    CLOSE_GOTO:
+CLOSE_GOTO:
     int closekvm = close(gameboyKvmVM.kvmFd);
     return 0;
 }

@@ -5,9 +5,12 @@
 #include <string.h>
 #include <sys/mman.h>
 
+const int PAGE_SIZE = 0x1000;
+
 typedef struct GBAMemory GBAMemory;
 
-const int PAGE_SIZE = 0x1000;
+
+
 GBAMemory GBAMemory_init() {
     void *physicalMemory =
         mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -21,4 +24,13 @@ GBAMemory GBAMemory_init() {
     GBAMemory gbaMemory = {.physicalMemory = physicalMemory,
                            .physicalMemorySize = PAGE_SIZE};
     return gbaMemory;
+}
+
+
+/**
+ * Copy code array into a buffer
+ */
+void GBAMemory_copy(GBAMemory* physicalMemory, void* code, size_t codeLen) {
+    // TODO: Memory size checks
+    memcpy(physicalMemory->physicalMemory, code, codeLen);
 }

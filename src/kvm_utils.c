@@ -56,7 +56,14 @@ bool setPCValue(int vcpuFd, uint64_t pcAddress) {
 }
 
 
-
+inline bool verifyExtension(int kvmFd, int capability, const char* capabilityName){
+    int capabilityCheckResult = ioctl(kvmFd, KVM_CHECK_EXTENSION, capability);
+    if (capabilityCheckResult <= 0) {
+        printf("Not Supported: %10s",capabilityName);
+        return false;
+    }
+    return true;
+}
 
 /**
  * Assert kvm functionalities and return true;
@@ -68,29 +75,9 @@ bool verifyKvmFunctionality(int k) {
         return false;
     }
 
-    int kvmMemoryMapCapability =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_USER_MEMORY);
-
-    if (kvmMemoryMapCapability == -1 || !kvmMemoryMapCapability) {
-        printf("Not Supported: User memory");
-        return false;
-    }
-    int kvmSetOneRegCapability = ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ONE_REG);
-    if (kvmSetOneRegCapability <= 0) {
-        printf("Not Supported: Individual registers");
-        return false;
-    }
-    int kvm32EmulationCapability =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ARM_EL1_32BIT);
-    if (kvm32EmulationCapability <= 0) {
-        printf("Not Supported: arm32 execution");
-        return false;
-    }
-    int nistToUser =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ARM_NISV_TO_USER);
-    if (nistToUser <= 0) {
-        printf("Not Supported: arm32 execution");
-        return false;
-    }
-    return true;
+    return verifyExtension(k, KVM_CAP_USER_MEMORY, "User memory") &&
+    verifyExtension(k, KVM_CAP_ONE_REG, "Single register G/S") &&
+    verifyExtension(k, KVM_CAP_ARM_EL1_32BIT, "AArch32 execution");
+    // FIXME: not yet required
+    //&& verifyExtension(k, KVM_CAP_ARM_NISV_TO_USER, "Userland pagefault");
 }
