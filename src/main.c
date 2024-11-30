@@ -1,5 +1,4 @@
 
-#include "main.h"
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -12,6 +11,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "arm_code.h"
+#include "gba_memory.h"
 #include "util.h"
 #include "kvm_utils.h"
 
@@ -32,27 +32,26 @@ int main(int, char**) {
     }
     if (!verifyKvmFunctionality(k)) {
         printf("Not capable");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
 
     // kvm is ready to use
     int vmfd = ioctl(k, KVM_CREATE_VM, 0);
     if (vmfd < 0) {
         printf("Could not create VM");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
-
     void* physicalMemory = mmap(0, 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC,
                                 MAP_SHARED | MAP_ANONYMOUS, 0, 0);
     if (physicalMemory == MAP_FAILED) {
         printf("mmap of physical memory failed\n");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
     initmemory(physicalMemory, CODE, CODE_LENGTH);
 
     if (!physicalMemory) {
         printf("Could not create memory");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
 
     GameboyKvmVM gameboyKvmVM = {.kvmFd = k,
@@ -70,7 +69,7 @@ int main(int, char**) {
         ioctl(gameboyKvmVM.vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
     if (memorySetRequest == -1) {
         perror("Failed to set memory");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
 
     // ioctl(gameboyKvmVM.vmFd, KVM_ARM_)
@@ -79,7 +78,7 @@ int main(int, char**) {
     int cpuFd = ioctl(gameboyKvmVM.vmFd, KVM_CREATE_VCPU, 0);
     if (cpuFd == -1) {
         perror("Failed to create memory");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
     gameboyKvmVM.vcpuFd = cpuFd;
 
@@ -95,7 +94,7 @@ int main(int, char**) {
             ioctl(gameboyKvmVM.vmFd, KVM_ARM_PREFERRED_TARGET, &cpuInit);
         if (preferredTarget != 0) {
             perror("Failed to get preffered arch");
-            goto closeGoto;
+            goto CLOSE_GOTO;
         }
     }
     cpuInit.features[0] |= 1 << KVM_ARM_VCPU_EL1_32BIT;
@@ -104,49 +103,15 @@ int main(int, char**) {
             ioctl(gameboyKvmVM.vcpuFd, KVM_ARM_VCPU_INIT, &cpuInit);
         if (vcpuInitResult != 0) {
             perror("Failed to get init vcpu");
-            goto closeGoto;
+            goto CLOSE_GOTO;
         }
     }
 
-    struct kvm_regs s;
-
-    struct kvm_reg_list regList = {};
-    // get reg list
-    // int regListState = ioctl(gameboyKvmVM.vcpuFd, KVM_GET_REG_LIST, &regList);
-    // if(regListState!=0){
-    //     perror("Failed to get reg");
-    //     goto closeGoto;
-    // }
-    uint64_t pcreg2 = KVM_REG_ARM_CORE | KVM_REG_SIZE_U32 |
-                      KVM_REG_ARM_CORE_REG(regs.regs[15]);
-    // s.regs.regs[15];
-    uint64_t pcregId = KVM_REG_ARM_CORE_REG(regs.pc);
-    uint64_t prefix = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
-    if(prefix!=0x6030000000100000){
-        printf("Warning, not correct!\n");
-    }
-    struct kvm_one_reg pcSetRequest = {.id = prefix | pcregId,
-                                       .addr = &gameboyKvmVM.initialPcRegister};
-    int pcSet = ioctl(gameboyKvmVM.vcpuFd, KVM_SET_ONE_REG, &pcSetRequest);
-    if (pcSet != 0) {
+    int pcSet = setPCValue(gameboyKvmVM.vcpuFd, 0x1000);
+    if (!pcSet) {
         perror("Failed to set pc reg");
-        goto closeGoto;
+        goto CLOSE_GOTO;
     }
-
-    uint64_t pccurrent = 4500;
-    struct kvm_one_reg pcGetRequest = {.id = prefix | pcregId,
-                                       .addr = &pccurrent};
-    int pcGet = ioctl(gameboyKvmVM.vcpuFd, KVM_GET_ONE_REG, &pcGetRequest);
-
-    if (pcGet != 0) {
-        perror("Failed to get pc reg");
-        goto closeGoto;
-    }
-    if(pccurrent!=0x1000){
-        printf("Incorrect pc reg");
-        goto closeGoto;
-    }
-
 
     bool loopingCpu = true;
     while (loopingCpu) {
@@ -200,44 +165,7 @@ int main(int, char**) {
         }
     }
 
-    closeGoto:
+    CLOSE_GOTO:
     int closekvm = close(gameboyKvmVM.kvmFd);
     return 0;
-}
-
-/**
- * Assert kvm functionalities and return true;
- */
-bool verifyKvmFunctionality(int k) {
-    int kvmApiVersion = ioctl(k, KVM_GET_API_VERSION, NULL);
-    if (kvmApiVersion != 12) {
-        printf("Not supported: Stable API");
-        return false;
-    }
-
-    int kvmMemoryMapCapability =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_USER_MEMORY);
-
-    if (kvmMemoryMapCapability == -1 || !kvmMemoryMapCapability) {
-        printf("Not Supported: User memory");
-        return false;
-    }
-    int kvmSetOneRegCapability = ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ONE_REG);
-    if (kvmSetOneRegCapability <= 0) {
-        printf("Not Supported: Individual registers");
-        return false;
-    }
-    int kvm32EmulationCapability =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ARM_EL1_32BIT);
-    if (kvm32EmulationCapability <= 0) {
-        printf("Not Supported: arm32 execution");
-        return false;
-    }
-    int nistToUser =
-        ioctl(k, KVM_CHECK_EXTENSION, KVM_CAP_ARM_NISV_TO_USER);
-    if (nistToUser <= 0) {
-        printf("Not Supported: arm32 execution");
-        return false;
-    }
-    return true;
 }
