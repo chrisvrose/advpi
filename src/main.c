@@ -14,14 +14,7 @@
 #include "arm_code.h"
 #include "gba_memory.h"
 #include "kvm_utils.h"
-
-typedef struct GameboyKvmVM {
-    int kvmFd;
-    int vmFd;
-    struct GBAMemory guestMemory;
-    int vcpuFd;
-    uint64_t initialPcRegister;
-} GameboyKvmVM;
+#include "gba_vm.h"
 
 int main(int, char**) {
     printf("Hello, from advpi!\n");
