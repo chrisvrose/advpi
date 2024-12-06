@@ -55,15 +55,8 @@ int main(int, char**) {
                                  .initialPcRegister = 0x1000};
 
     // allocate memory
-    struct kvm_userspace_memory_region memory_region = {
-        .slot = 0,
-        .userspace_addr =
-            (unsigned long long)gameboyKvmVM.guestMemory.physicalMemory,
-        .guest_phys_addr = 0x1000,
-        .memory_size = 0x1000};
-    int memorySetRequest =
-        ioctl(gameboyKvmVM.vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
-    if (memorySetRequest == -1) {
+    bool memorySetRequest = GBAMemory_mapToVm(&memory, vmfd);
+    if (!memorySetRequest) {
         perror("Failed to set memory");
         goto CLOSE_GOTO;
     }
