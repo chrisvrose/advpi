@@ -12,8 +12,8 @@ GPU, I/O still need to be emulated, of course.
 
 - Performance (CPU Usage)
   - The RPI is much faster. Can we time it so that the timing works similarly?
-- Memory usage
-  - How much does the 
+- Resource usage
+  - Is it better to use an emulator in low-power devices?
 - Timing Accuracies
   - Is that possible to emulate?
 
