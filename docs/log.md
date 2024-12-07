@@ -55,3 +55,14 @@
 - BRK is useless. Rather, just attempt to fetch a useless instruction.
 
 ### What's next
+
+- memory maps
+- device emulation.
+
+## Week 3
+
+not much.
+
+### What I did
+
+- setting the bios memory region, and mmapping files

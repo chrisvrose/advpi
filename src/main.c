@@ -37,7 +37,7 @@ int main(int, char**) {
 
     // memory
     struct GBAMemory memory = GBAMemory_init();
-    if (memory.physicalMemorySize == 0) {
+    if (memory.onboardMemory == NULL || memory.bios == NULL || memory.biosFd==-1) {
         goto CLOSE_GOTO;
     }
     GBAMemory_copy(&memory, CODE, CODE_LENGTH);
@@ -45,7 +45,7 @@ int main(int, char**) {
     GameboyKvmVM gameboyKvmVM = {.kvmFd = k,
                                  .vmFd = vmfd,
                                  .guestMemory = memory,
-                                 .initialPcRegister = 0x1000};
+                                 .initialPcRegister = 0x02000000};
 
     // allocate memory
     bool memorySetRequest = GBAMemory_mapToVm(&memory, vmfd);
@@ -87,7 +87,7 @@ int main(int, char**) {
         }
     }
 
-    int pcSet = setPCValue(gameboyKvmVM.vcpuFd, 0x1000);
+    int pcSet = setPCValue(gameboyKvmVM.vcpuFd, gameboyKvmVM.initialPcRegister);
     if (!pcSet) {
         perror("Failed to set pc reg");
         goto CLOSE_GOTO;
