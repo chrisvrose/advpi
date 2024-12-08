@@ -61,8 +61,11 @@
 
 ## Week 3
 
-not much.
+Mostly refactoring.
 
 ### What I did
 
 - setting the bios memory region, and mmapping files
+- Moving to C++. It is nigh impossible to keep up with C. I need exceptions.
+  - Translating
+- To Read: http://www.cs.columbia.edu/~cdall/pubs/isca2016-dall.pdf

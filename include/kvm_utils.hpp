@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <cstdbool>
+#include <cstdint>
 
 uint64_t getRegisterValue(int vcpuFd, int reg_number);
 uint64_t getPCValue(int vcpuFd);

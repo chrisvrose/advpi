@@ -1,0 +1,131 @@
+#include <fcntl.h>
+#include <gba_memory.hpp>
+#include <linux/kvm.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+/*
+Memory map
+
+General Internal Memory
+
+  00000000-00003FFF   BIOS - System ROM         (16 KBytes)
+  00004000-01FFFFFF   Not used
+  02000000-0203FFFF   WRAM - On-board Work RAM  (256 KBytes) 2 Wait
+  02040000-02FFFFFF   Not used
+  03000000-03007FFF   WRAM - On-chip Work RAM   (32 KBytes)
+  03008000-03FFFFFF   Not used
+  04000000-040003FE   I/O Registers
+  04000400-04FFFFFF   Not used
+
+Internal Display Memory
+
+  05000000-050003FF   BG/OBJ Palette RAM        (1 Kbyte)
+  05000400-05FFFFFF   Not used
+  06000000-06017FFF   VRAM - Video RAM          (96 KBytes)
+  06018000-06FFFFFF   Not used
+  07000000-070003FF   OAM - OBJ Attributes      (1 Kbyte)
+  07000400-07FFFFFF   Not used
+
+External Memory (Game Pak)
+
+  08000000-09FFFFFF   Game Pak ROM/FlashROM (max 32MB) - Wait State 0
+  0A000000-0BFFFFFF   Game Pak ROM/FlashROM (max 32MB) - Wait State 1
+  0C000000-0DFFFFFF   Game Pak ROM/FlashROM (max 32MB) - Wait State 2
+  0E000000-0E00FFFF   Game Pak SRAM    (max 64 KBytes) - 8bit Bus width
+  0E010000-0FFFFFFF   Not used
+
+Unused Memory Area
+
+  10000000-FFFFFFFF   Not used (upper 4bits of address bus unused)
+
+*/
+
+const int BIOS_START = 0x0;
+const int BIOS_SIZE = 0x4000;
+const int ONBOARD_MEM_START = 0x03000000;
+const int ONBOARD_MEM_SIZE = 0x40000;
+const int ONCHIP_MEM_START = 0x03000000;
+const int ONCHIP_MEM_SIZE = 0x8000;
+
+
+GBAMemory::GBAMemory(){
+    void* onBoardMemory =
+        mmap(NULL, ONBOARD_MEM_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
+             MAP_SHARED | MAP_ANONYMOUS, 0, 0);
+
+    if (onBoardMemory == MAP_FAILED) {
+        printf("mmap of physical memory failed\n");
+        throw InitializationError("MMap failed");
+    }
+    printf("Mapped onboard memory\n");
+
+    int biosFd = open("bios.bin", O_RDONLY);
+    if (biosFd <=0) {
+        printf("could not open rom\n");
+        throw InitializationError("could not open rom");
+    }
+    printf("Opened bios\n");
+    void* biosRom =
+        mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
+    perror("What");
+
+    if (biosRom == MAP_FAILED) {
+        printf("mmap of bios failed\n");
+        throw InitializationError("bios mmap failed");
+    }
+
+    this->onboardMemory = onBoardMemory;
+    this->biosFd = biosFd;
+    this->bios = biosRom;
+}
+
+void GBAMemory::debug_memory(void* memory, int size) {
+    char* memoryChar = (char*)memory;
+    printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1], memoryChar[2],
+           memoryChar[3]);
+    printf("Last byte: %x\n",memoryChar[size-1]);
+}
+
+/**
+ * Copy code array into a buffer
+ */
+void GBAMemory::copyToWorkVm( void* code, size_t codeLen) {
+    // TODO: Memory size checks
+    memcpy(this->onboardMemory, code, codeLen);
+}
+
+bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress, uint64_t addressSize,
+                        uint64_t vmAddress, bool readOnly, uint32_t slot) {
+    printf("Assigning memory @ %lx for length %lx from %lx\n",vmAddress,addressSize, hostAddress);
+    struct kvm_userspace_memory_region memory_region = {
+        .slot = slot,
+        .flags = static_cast<__u32>((readOnly ? KVM_MEM_READONLY : 0)),
+        .guest_phys_addr = vmAddress,
+        .memory_size = addressSize,
+        .userspace_addr = (unsigned long long)hostAddress,
+    };
+    int memorySetRequest =
+        ioctl(vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
+    printf("Memory setting %d\n",memorySetRequest);
+    return memorySetRequest == 0;
+}
+
+bool GBAMemory::mapToVM(int vmFd) {
+    return this->mapSegmentToMemory(vmFd, this->onboardMemory, ONBOARD_MEM_SIZE,
+                              0x02000000, false, 1)
+             && this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, 0x0, true, 0)
+           ;
+}
+GBAMemory::~GBAMemory() {
+    printf("Cleaning up memory\n");
+    if (this->onboardMemory != NULL) {
+        munmap(this->onboardMemory,ONBOARD_MEM_SIZE);
+    }
+    if (this->bios != NULL) {
+        munmap(this->bios, BIOS_SIZE);
+    }
+}

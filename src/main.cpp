@@ -3,21 +3,23 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/kvm.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "arm_code.h"
-#include "gba_memory.h"
-#include "kvm_utils.h"
-#include "gba_vm.h"
+#include <cstdbool>
+#include <cstddef>
+#include <cstdio>
+#include <cstring>
+
+#include "arm_code.hpp"
+#include "gba_memory.hpp"
+#include "gba_vm.hpp"
+#include "kvm_utils.hpp"
 
 int main(int, char**) {
     printf("Hello, from advpi!\n");
+
     int k = open("/dev/kvm", O_RDWR);
     if (k <= 0) {
         printf("Failed to open kvm \n");
@@ -25,22 +27,21 @@ int main(int, char**) {
     }
     if (!verifyKvmFunctionality(k)) {
         printf("Not capable");
-        goto CLOSE_GOTO;
+        return 1;
     }
 
     // kvm is ready to use
     int vmfd = ioctl(k, KVM_CREATE_VM, 0);
     if (vmfd < 0) {
         printf("Could not create VM");
-        goto CLOSE_GOTO;
+        return 1;
     }
+    printf("Readied VM arch\n");
 
     // memory
-    struct GBAMemory memory = GBAMemory_init();
-    if (memory.onboardMemory == NULL || memory.bios == NULL || memory.biosFd==-1) {
-        goto CLOSE_GOTO;
-    }
-    GBAMemory_copy(&memory, CODE, CODE_LENGTH);
+    GBAMemory memory;
+
+    memory.copyToWorkVm((void*)CODE, CODE_LENGTH);
 
     GameboyKvmVM gameboyKvmVM = {.kvmFd = k,
                                  .vmFd = vmfd,
@@ -48,25 +49,25 @@ int main(int, char**) {
                                  .initialPcRegister = 0x02000000};
 
     // allocate memory
-    bool memorySetRequest = GBAMemory_mapToVm(&memory, vmfd);
+    bool memorySetRequest = memory.mapToVM(vmfd);
     if (!memorySetRequest) {
         perror("Failed to set memory");
-        goto CLOSE_GOTO;
+        return 1;
     }
 
     // allocate cpu
     int cpuFd = ioctl(gameboyKvmVM.vmFd, KVM_CREATE_VCPU, 0);
     if (cpuFd == -1) {
         perror("Failed to create memory");
-        goto CLOSE_GOTO;
+        return 1;
     }
     gameboyKvmVM.vcpuFd = cpuFd;
 
     int vcpuDetailsSize =
         ioctl(gameboyKvmVM.kvmFd, KVM_GET_VCPU_MMAP_SIZE, NULL);
     struct kvm_run* vcpuKvmRun =
-        mmap(NULL, vcpuDetailsSize, PROT_READ | PROT_WRITE, MAP_SHARED,
-             gameboyKvmVM.vcpuFd, 0);
+        (struct kvm_run*)mmap(NULL, vcpuDetailsSize, PROT_READ | PROT_WRITE,
+                              MAP_SHARED, gameboyKvmVM.vcpuFd, 0);
 
     struct kvm_vcpu_init cpuInit = {};
     {
@@ -74,7 +75,7 @@ int main(int, char**) {
             ioctl(gameboyKvmVM.vmFd, KVM_ARM_PREFERRED_TARGET, &cpuInit);
         if (preferredTarget != 0) {
             perror("Failed to get preffered arch");
-            goto CLOSE_GOTO;
+            return 1;
         }
     }
     cpuInit.features[0] |= 1 << KVM_ARM_VCPU_EL1_32BIT;
@@ -83,14 +84,14 @@ int main(int, char**) {
             ioctl(gameboyKvmVM.vcpuFd, KVM_ARM_VCPU_INIT, &cpuInit);
         if (vcpuInitResult != 0) {
             perror("Failed to get init vcpu");
-            goto CLOSE_GOTO;
+            return 1;
         }
     }
 
     int pcSet = setPCValue(gameboyKvmVM.vcpuFd, gameboyKvmVM.initialPcRegister);
     if (!pcSet) {
         perror("Failed to set pc reg");
-        goto CLOSE_GOTO;
+        return 1;
     }
 
     bool loopingCpu = true;
@@ -98,6 +99,10 @@ int main(int, char**) {
         int vcpuStart = ioctl(gameboyKvmVM.vcpuFd, KVM_RUN, NULL);
         if (vcpuStart != 0) {
             perror("Failed to run");
+            for (int r = 0; r < 16; r++) {
+                printf("Got Registers: %d(%ld)\n", r,
+                       getRegisterValue(gameboyKvmVM.vcpuFd, r));
+            }
             loopingCpu = false;
             continue;
         }
@@ -133,10 +138,11 @@ int main(int, char**) {
             case KVM_EXIT_MMIO:
                 printf("Attempted mmio\n");
 
-                for (int r = 0; r < 16; r++){
+                for (int r = 0; r < 16; r++) {
                     printf("Got Registers: %d(%ld)\n", r,
-                           getRegisterValue(gameboyKvmVM.vcpuFd, r));}
-
+                           getRegisterValue(gameboyKvmVM.vcpuFd, r));
+                }
+                loopingCpu = false;
                 break;
             default:
                 printf("Why did we exit?, exit reason %d\n",
@@ -145,6 +151,7 @@ int main(int, char**) {
     }
 
 CLOSE_GOTO:
+    printf("Quitting\n");
     int closekvm = close(gameboyKvmVM.kvmFd);
     return 0;
 }

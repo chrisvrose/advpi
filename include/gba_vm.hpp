@@ -1,5 +1,7 @@
 #pragma once
-#include <stddef.h>
+#include <cstddef>
+#include <cstdint>
+#include "gba_memory.hpp"
 
 typedef struct GameboyKvmVM {
     int kvmFd;
