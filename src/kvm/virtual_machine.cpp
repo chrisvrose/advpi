@@ -21,15 +21,16 @@ VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemory> memory,
         this->kvmFd = kvmId;
     }
     this->assertKvmFunctionalityAndExtensions();
-    int vmfd = ioctl(this->kvmFd, KVM_CREATE_VM, 0);
+    {int vmfd = ioctl(this->kvmFd, KVM_CREATE_VM, 0);
     if (vmfd < 0) {
         printf("Could not create VM");
         close(this->kvmFd);
         throw InitializationError("Failed to open Virtual Machine");
     }
+    this->vmFd = vmfd;}
     this->mapMemory();
 
-    this->cpu = new VCPU(this->kvmFd, vmFd);
+    this->cpu = new VCPU(this->kvmFd, this->vmFd);
     this->cpu->setPCValue(this->initialPcRegister);
 }
 
@@ -59,8 +60,7 @@ void VirtualMachine::_debugPrintRegisters() {
     }
 }
 void VirtualMachine::_debugSetWorkRam(void *code, size_t codeLen) {
-    std::cout << "TODO" << std::endl;
-    this->memory->copyToWorkVm(code, codeLen);
+    this->memory->_debug_copyToWorkVm(code, codeLen);
 }
 
 void VirtualMachine::assertKvmExtension(int capability,
@@ -73,7 +73,6 @@ void VirtualMachine::assertKvmExtension(int capability,
     }
 }
 void VirtualMachine::mapMemory() {
-    std::cout<<"Mapping mem\n"<<std::flush;
     if (!this->memory->mapToVM(this->vmFd)) {
         throw InitializationError("Failed to map memory");
     }

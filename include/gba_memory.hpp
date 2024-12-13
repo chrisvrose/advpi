@@ -17,8 +17,7 @@ class GBAMemory {
    public:
     GBAMemory();
     bool mapToVM(int vmFd);
-    void copyToWorkVm(void* code, size_t codeLen);
-    // bool mapToVM(int vmFd);
+    void _debug_copyToWorkVm(void* code, size_t codeLen);
     ~GBAMemory();
 };
 

@@ -21,8 +21,12 @@ int main(int, char**) {
     bool loopingCpu = true;
 
     while (loopingCpu) {
+        std::cout<< "Begin execution\n"<<std::flush;
         std::variant<int, struct kvm_run*> run_state = vm.run();
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
+            std::cout<<"Failed to execute"<<std::endl;
+            vm._debugPrintRegisters();
+            loopingCpu = false;
         } else if (struct kvm_run** run_state_result_ptr =
                        std::get_if<struct kvm_run*>(&run_state)) {
             const struct kvm_run* vcpuKvmRun = *run_state_result_ptr;

@@ -47,7 +47,7 @@ Unused Memory Area
 
 const int BIOS_START = 0x0;
 const int BIOS_SIZE = 0x4000;
-const int ONBOARD_MEM_START = 0x03000000;
+const int ONBOARD_MEM_START = 0x02000000;
 const int ONBOARD_MEM_SIZE = 0x40000;
 const int ONCHIP_MEM_START = 0x03000000;
 const int ONCHIP_MEM_SIZE = 0x8000;
@@ -71,7 +71,6 @@ GBAMemory::GBAMemory() {
     std::cout << ("Opened bios\n");
     void* biosRom =
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
-    std::cout << ("What");
 
     if (biosRom == MAP_FAILED) {
         printf("mmap of bios failed\n");
@@ -93,15 +92,13 @@ void GBAMemory::debug_memory(void* memory, int size) {
 /**
  * Copy code array into a buffer
  */
-void GBAMemory::copyToWorkVm(void* code, size_t codeLen) {
-    // TODO: Memory size checks
+void GBAMemory::_debug_copyToWorkVm(void* code, size_t codeLen) {
     memcpy(this->onboardMemory, code, codeLen);
 }
 
 bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress,
                                    uint64_t addressSize, uint64_t vmAddress,
                                    bool readOnly, uint32_t slot) {
-    std::cout << "Assigning" << hostAddress << std::flush;
 
     struct kvm_userspace_memory_region memory_region = {
         .slot = slot,
@@ -112,21 +109,18 @@ bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress,
     };
     int memorySetRequest =
         ioctl(vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
-    printf("Memory setting %d\n", memorySetRequest);
     return memorySetRequest == 0;
 }
 
 bool GBAMemory::mapToVM(int vmFd) {
-    std::cout << "Map4\n" << std::flush;
     bool x = this->mapSegmentToMemory(vmFd, this->onboardMemory,
-                                      ONBOARD_MEM_SIZE, 0x02000000, false, 1);
+                                      ONBOARD_MEM_SIZE, ONBOARD_MEM_START, false, 1);
 
     bool y =
-        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, 0x0, true, 0);
+        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, BIOS_START, true, 0);
     return x && y;
 }
 GBAMemory::~GBAMemory() {
-    printf("Cleaning up memory\n");
     if (this->onboardMemory != NULL) {
         munmap(this->onboardMemory, ONBOARD_MEM_SIZE);
     }
