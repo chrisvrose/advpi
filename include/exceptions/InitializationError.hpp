@@ -1,9 +1,7 @@
-#include<string>
-#include<exception>
-
-class InitializationError : public std::exception {
-    private:
-    std::string message;
-    public:
-    InitializationError(std::string);
+#pragma once
+#include <stdexcept>
+#include <string>
+class InitializationError : public std::runtime_error {
+   public:
+   InitializationError(const std::string& what_arg): std::runtime_error(what_arg){};
 };

@@ -16,16 +16,11 @@ class GBAMemory {
 
    public:
     GBAMemory();
-    void copyToWorkVm(void* code, size_t codeLen);
     bool mapToVM(int vmFd);
+    void copyToWorkVm(void* code, size_t codeLen);
+    // bool mapToVM(int vmFd);
     ~GBAMemory();
 };
 
 extern const int ONBOARD_MEM_SIZE;
 extern const int BIOS_SIZE;
-// struct GBAMemory GBAMemory_init();
-// void GBAMemory_copy(struct GBAMemory* physicalMemory, void* code,
-//                     size_t codeLen);
-
-// bool GBAMemory_mapToVm(struct GBAMemory*, int);
-// void GBAMemory_close(struct GBAMemory* memory);

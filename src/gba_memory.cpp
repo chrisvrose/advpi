@@ -1,12 +1,13 @@
 #include <fcntl.h>
-#include <gba_memory.hpp>
 #include <linux/kvm.h>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <gba_memory.hpp>
+#include <iostream>
 /*
 Memory map
 
@@ -51,27 +52,26 @@ const int ONBOARD_MEM_SIZE = 0x40000;
 const int ONCHIP_MEM_START = 0x03000000;
 const int ONCHIP_MEM_SIZE = 0x8000;
 
-
-GBAMemory::GBAMemory(){
+GBAMemory::GBAMemory() {
     void* onBoardMemory =
         mmap(NULL, ONBOARD_MEM_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
              MAP_SHARED | MAP_ANONYMOUS, 0, 0);
 
     if (onBoardMemory == MAP_FAILED) {
-        printf("mmap of physical memory failed\n");
+        perror("mmap of physical memory failed\n");
         throw InitializationError("MMap failed");
     }
-    printf("Mapped onboard memory\n");
+    std::cout << ("Mapped onboard memory\n");
 
     int biosFd = open("bios.bin", O_RDONLY);
-    if (biosFd <=0) {
+    if (biosFd <= 0) {
         printf("could not open rom\n");
         throw InitializationError("could not open rom");
     }
-    printf("Opened bios\n");
+    std::cout << ("Opened bios\n");
     void* biosRom =
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
-    perror("What");
+    std::cout << ("What");
 
     if (biosRom == MAP_FAILED) {
         printf("mmap of bios failed\n");
@@ -85,22 +85,24 @@ GBAMemory::GBAMemory(){
 
 void GBAMemory::debug_memory(void* memory, int size) {
     char* memoryChar = (char*)memory;
-    printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1], memoryChar[2],
-           memoryChar[3]);
-    printf("Last byte: %x\n",memoryChar[size-1]);
+    printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1],
+           memoryChar[2], memoryChar[3]);
+    printf("Last byte: %x\n", memoryChar[size - 1]);
 }
 
 /**
  * Copy code array into a buffer
  */
-void GBAMemory::copyToWorkVm( void* code, size_t codeLen) {
+void GBAMemory::copyToWorkVm(void* code, size_t codeLen) {
     // TODO: Memory size checks
     memcpy(this->onboardMemory, code, codeLen);
 }
 
-bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress, uint64_t addressSize,
-                        uint64_t vmAddress, bool readOnly, uint32_t slot) {
-    printf("Assigning memory @ %lx for length %lx from %lx\n",vmAddress,addressSize, hostAddress);
+bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress,
+                                   uint64_t addressSize, uint64_t vmAddress,
+                                   bool readOnly, uint32_t slot) {
+    std::cout << "Assigning" << hostAddress << std::flush;
+
     struct kvm_userspace_memory_region memory_region = {
         .slot = slot,
         .flags = static_cast<__u32>((readOnly ? KVM_MEM_READONLY : 0)),
@@ -110,20 +112,23 @@ bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress, uint64_t address
     };
     int memorySetRequest =
         ioctl(vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
-    printf("Memory setting %d\n",memorySetRequest);
+    printf("Memory setting %d\n", memorySetRequest);
     return memorySetRequest == 0;
 }
 
 bool GBAMemory::mapToVM(int vmFd) {
-    return this->mapSegmentToMemory(vmFd, this->onboardMemory, ONBOARD_MEM_SIZE,
-                              0x02000000, false, 1)
-             && this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, 0x0, true, 0)
-           ;
+    std::cout << "Map4\n" << std::flush;
+    bool x = this->mapSegmentToMemory(vmFd, this->onboardMemory,
+                                      ONBOARD_MEM_SIZE, 0x02000000, false, 1);
+
+    bool y =
+        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, 0x0, true, 0);
+    return x && y;
 }
 GBAMemory::~GBAMemory() {
     printf("Cleaning up memory\n");
     if (this->onboardMemory != NULL) {
-        munmap(this->onboardMemory,ONBOARD_MEM_SIZE);
+        munmap(this->onboardMemory, ONBOARD_MEM_SIZE);
     }
     if (this->bios != NULL) {
         munmap(this->bios, BIOS_SIZE);

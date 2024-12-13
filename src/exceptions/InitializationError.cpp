@@ -1,5 +1,5 @@
 
 #include <exceptions/InitializationError.hpp>
 
-InitializationError::InitializationError(std::string message)
-    : message(message){};
+//InitializationError::InitializationError(std::string message)
+//    : message(message){};
