@@ -61,6 +61,8 @@
 
 ## Week 3
 
+02/12-08/12
+
 Mostly refactoring.
 
 ### What I did
@@ -69,3 +71,10 @@ Mostly refactoring.
 - Moving to C++. It is nigh impossible to keep up with C. I need exceptions.
   - Translating
 - To Read: http://www.cs.columbia.edu/~cdall/pubs/isca2016-dall.pdf
+
+## Week 4
+
+- Refactoring to C++. Add exceptions, cleanup to same state as before refactor.
+- TODO: think about timed interruptions?
+
+## Week 5
