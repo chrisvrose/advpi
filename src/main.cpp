@@ -4,14 +4,13 @@
 #include <unistd.h>
 
 #include <cstddef>
-#include <cstring>
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 
-#include "arm_code.hpp"
-#include "gba_memory.hpp"
+#include <arm_code.hpp>
+#include <gba_memory.hpp>
 
-int main(int, char**) {
+int main(int argc, char**) {
     std::cout << "Hello, from advpi!\n";
     std::unique_ptr<GBAMemory> mem(new GBAMemory());
     VirtualMachine vm(std::move(mem), 0x02'000'000);
@@ -24,7 +23,7 @@ int main(int, char**) {
         std::cout<< "Begin execution\n"<<std::flush;
         std::variant<int, struct kvm_run*> run_state = vm.run();
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
-            std::cout<<"Failed to execute"<<std::endl;
+            std::cout<<"Failed to execute: Returned "<<*failedToRun<<std::endl;
             vm._debugPrintRegisters();
             loopingCpu = false;
         } else if (struct kvm_run** run_state_result_ptr =

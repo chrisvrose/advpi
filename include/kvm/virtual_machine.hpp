@@ -1,7 +1,6 @@
 #pragma once
 #include "gba_memory.hpp"
 #include "kvm/vcpu.hpp"
-#include <cstdint>
 #include <optional>
 #include <memory>
 

@@ -3,10 +3,9 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include <cstdint>
 #include <kvm/vcpu.hpp>
 
-#include "exceptions/InitializationError.hpp"
+#include "exceptions/initialization_error.hpp"
 // #include "kvm_utils.hpp"
 const uint64_t REG_PREFIX = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
 
@@ -58,6 +57,7 @@ void VCPU::setPCValue(uint64_t pcAddress) {
 std::variant<int, struct kvm_run*> VCPU::run() {
     int vcpuStart = ioctl(this->fd, KVM_RUN, NULL);
     if (vcpuStart != 0) {
+        perror("Failed to execute!");
         return std::variant<int, struct kvm_run*>(vcpuStart);
     } else {
         return std::variant<int, struct kvm_run*>(this->kvmRunStats);

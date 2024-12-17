@@ -3,7 +3,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include <exceptions/InitializationError.hpp>
+#include <exceptions/initialization_error.hpp>
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <memory>

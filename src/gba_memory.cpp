@@ -61,7 +61,6 @@ GBAMemory::GBAMemory() {
         perror("mmap of physical memory failed\n");
         throw InitializationError("MMap failed");
     }
-    std::cout << ("Mapped onboard memory\n");
 
     int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {

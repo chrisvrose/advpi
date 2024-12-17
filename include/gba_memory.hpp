@@ -1,8 +1,7 @@
 #pragma once
-#include <cstdbool>
 #include <cstddef>
 
-#include <exceptions/InitializationError.hpp>
+#include <exceptions/initialization_error.hpp>
 
 class GBAMemory {
    private:
