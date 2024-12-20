@@ -24,7 +24,6 @@ VCPU::VCPU(int kvmFd, int vmFd) {
         (struct kvm_run*)mmap(NULL, this->kvmRunDetailsSize,
                               PROT_READ | PROT_WRITE, MAP_SHARED, cpuFd, 0);
     this->kvmRunStats = vcpuKvmRun;
-    // TODO: activate
     this->cpuInit(vmFd);
 }
 void VCPU::cpuInit(int vmFd) {

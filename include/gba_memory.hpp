@@ -20,5 +20,11 @@ class GBAMemory {
     ~GBAMemory();
 };
 
-extern const int ONBOARD_MEM_SIZE;
+extern const int BIOS_START;
 extern const int BIOS_SIZE;
+
+extern const int ONBOARD_MEM_START;
+extern const int ONBOARD_MEM_SIZE;
+
+extern const int ONCHIP_MEM_START;
+extern const int ONCHIP_MEM_SIZE;

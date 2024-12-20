@@ -46,11 +46,11 @@ Unused Memory Area
 */
 
 const int BIOS_START = 0x0;
-const int BIOS_SIZE = 0x4000;
-const int ONBOARD_MEM_START = 0x02000000;
-const int ONBOARD_MEM_SIZE = 0x40000;
-const int ONCHIP_MEM_START = 0x03000000;
-const int ONCHIP_MEM_SIZE = 0x8000;
+const int BIOS_SIZE = 0x4'000;
+const int ONBOARD_MEM_START = 0x02'000'000;
+const int ONBOARD_MEM_SIZE = 0x40'000;
+const int ONCHIP_MEM_START = 0x03'000'000;
+const int ONCHIP_MEM_SIZE = 0x8'000;
 
 GBAMemory::GBAMemory() {
     void* onBoardMemory =
