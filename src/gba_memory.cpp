@@ -113,10 +113,10 @@ bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress,
 
 bool GBAMemory::mapToVM(int vmFd) {
     bool x = this->mapSegmentToMemory(vmFd, this->onboardMemory,
-                                      ONBOARD_MEM_SIZE, ONBOARD_MEM_START, false, 1);
+                                      ONBOARD_MEM_SIZE, ONBOARD_MEM_START, false, 0);
 
     bool y =
-        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, BIOS_START, true, 0);
+        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, BIOS_START, true, 1);
     return x && y;
 }
 GBAMemory::~GBAMemory() {

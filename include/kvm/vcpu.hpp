@@ -14,4 +14,5 @@ class VCPU {
     uint64_t getRegisterValue(int reg_number);
     uint64_t getPCValue();
     std::variant<int, struct kvm_run *> run();
+    void enableCPUCapability(uint32_t capability);
 };

@@ -96,3 +96,12 @@ uint64_t VCPU::getPCValue() {
     }
     return regCurrent;
 }
+void VCPU::enableCPUCapability(uint32_t capability){
+    struct kvm_enable_cap kvmCapability = {
+        .cap = capability
+    };
+    int ret = ioctl(this->fd,KVM_ENABLE_CAP, &kvmCapability);
+    if(ret!=0){
+        throw InitializationError("Failed to enable CPU capability "+std::to_string(capability));
+    }
+}

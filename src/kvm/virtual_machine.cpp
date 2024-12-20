@@ -32,6 +32,7 @@ VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemory> memory,
 
     this->cpu = new VCPU(this->kvmFd, this->vmFd);
     this->cpu->setPCValue(this->initialPcRegister);
+    // this->cpu->set
 }
 
 void VirtualMachine::assertKvmFunctionalityAndExtensions() {
@@ -54,7 +55,7 @@ void VirtualMachine::assertKvmFunctionalityAndExtensions() {
 }
 
 void VirtualMachine::_debugPrintRegisters() {
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i <= 15; i++) {
         std::cout << "Register(" << i << ")=" << this->cpu->getRegisterValue(i)
                   << std::endl;
     }
@@ -81,6 +82,21 @@ void VirtualMachine::mapMemory() {
 std::variant<int, struct kvm_run *> VirtualMachine::run() {
     return this->cpu->run();
 }
+
+void VirtualMachine::enableCPUCapability(uint32_t capability){
+    this->cpu->enableCPUCapability(capability);
+}
+void VirtualMachine::enableCapability(uint32_t capability){
+    struct kvm_enable_cap kvmCapability = {
+        .cap = capability
+    };
+    int ret = ioctl(this->vmFd,KVM_ENABLE_CAP, &kvmCapability);
+    if(ret!=0){
+        throw InitializationError("Failed to enable VM capability "+std::to_string(capability));
+    }
+}
+
+
 
 VirtualMachine::~VirtualMachine() {
     std::cout << "Closing the Virtual Machine\n";

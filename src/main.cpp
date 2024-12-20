@@ -3,12 +3,11 @@
 #include <linux/kvm.h>
 #include <unistd.h>
 
+#include <arm_code.hpp>
 #include <cstddef>
+#include <gba_memory.hpp>
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
-
-#include <arm_code.hpp>
-#include <gba_memory.hpp>
 
 int main(int argc, char**) {
     std::cout << "Hello, from advpi!\n";
@@ -16,14 +15,16 @@ int main(int argc, char**) {
     VirtualMachine vm(std::move(mem), 0x02'000'000);
 
     vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
+    vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
 
     bool loopingCpu = true;
 
     while (loopingCpu) {
-        std::cout<< "Begin execution\n"<<std::flush;
+        std::cout << "Begin execution\n" << std::flush;
         std::variant<int, struct kvm_run*> run_state = vm.run();
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
-            std::cout<<"Failed to execute: Returned "<<*failedToRun<<std::endl;
+            std::cout << "Failed to execute: Returned " << *failedToRun
+                      << std::endl;
             vm._debugPrintRegisters();
             loopingCpu = false;
         } else if (struct kvm_run** run_state_result_ptr =
@@ -47,7 +48,7 @@ int main(int argc, char**) {
                          vcpuKvmRun->internal.suberror);
                     break;
                 case KVM_EXIT_DEBUG:
-                    std::cout<<"We hit a breakpoint!\n";
+                    std::cout << "We hit a breakpoint!\n";
                     loopingCpu = false;
                     break;
                 case KVM_EXIT_IO:
@@ -61,11 +62,20 @@ int main(int argc, char**) {
                     errx(1, "unhandled KVM_EXIT_IO");
                     break;
                 case KVM_EXIT_MMIO:
-                    printf("Attempted mmio\n");
+                    std::cout << ("Attempted mmio\n");
 
                     vm._debugPrintRegisters();
                     loopingCpu = false;
                     break;
+                case KVM_EXIT_ARM_NISV: {
+                    uint64_t iss = vcpuKvmRun->arm_nisv.esr_iss;
+                    uint64_t fault_ipa = vcpuKvmRun->arm_nisv.fault_ipa;
+                    std::cout << "Broke for mem" << std::endl;
+                    printf("This is all that failed: %lx, %lx\n", iss,
+                           fault_ipa);
+                    vm._debugPrintRegisters();
+                    loopingCpu = false;
+                } break;
                 default:
                     printf("Why did we exit?, exit reason %d\n",
                            vcpuKvmRun->exit_reason);

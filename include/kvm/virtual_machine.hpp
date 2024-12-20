@@ -1,6 +1,6 @@
 #pragma once
-#include "gba_memory.hpp"
-#include "kvm/vcpu.hpp"
+#include <gba_memory.hpp>
+#include <kvm/vcpu.hpp>
 #include <optional>
 #include <memory>
 
@@ -26,5 +26,7 @@ class VirtualMachine {
 
     std::variant<int, struct kvm_run *> run();
 
+    void enableCapability(uint32_t capabilty);
+    void enableCPUCapability(uint32_t capabilty);
     ~VirtualMachine();
 };
