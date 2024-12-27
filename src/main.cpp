@@ -9,13 +9,18 @@
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 
+constexpr bool ENABLE_NISV_TO_USER = true;
+
 int main(int argc, char**) {
-    std::cout << "Hello, from advpi!\n";
+    std::cout << "Hello, from advpi!"<<std::endl;
     std::unique_ptr<GBAMemory> mem(new GBAMemory());
     VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
 
     vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
-    // vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
+
+    if constexpr (ENABLE_NISV_TO_USER) {
+        vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
+    }
 
     bool loopingCpu = true;
 
