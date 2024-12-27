@@ -84,3 +84,4 @@ Mostly refactoring.
 - Found: https://github.com/wheremyfoodat/kvm-arm32-on-arm64
 - it was the goddamn endianness
   - https://github.com/wheremyfoodat/kvm-arm32-on-arm64/blob/main/src/main.cpp#L248
+- Read only pages tend to MMIO
