@@ -6,8 +6,8 @@
 #include <kvm/vcpu.hpp>
 
 #include "exceptions/initialization_error.hpp"
-// #include "kvm_utils.hpp"
-const uint64_t REG_PREFIX = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
+
+constexpr uint64_t REG_PREFIX = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
 
 VCPU::VCPU(int kvmFd, int vmFd) {
     int cpuFd = ioctl(vmFd, KVM_CREATE_VCPU, 0);
