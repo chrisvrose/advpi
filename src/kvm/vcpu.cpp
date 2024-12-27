@@ -35,7 +35,7 @@ void VCPU::cpuInit(int vmFd) {
     cpuInit.features[0] |= 1 << KVM_ARM_VCPU_EL1_32BIT;
     int vcpuInitResult = ioctl(this->fd, KVM_ARM_VCPU_INIT, &cpuInit);
     if (vcpuInitResult != 0) {
-        throw InitializationError("Failed to get init vcpu");
+        throw InitializationError("Failed to init vcpu");
     }
 }
 // TODO

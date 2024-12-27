@@ -15,7 +15,7 @@ int main(int argc, char**) {
     VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
 
     vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
-    vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
+    // vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
 
     bool loopingCpu = true;
 
@@ -63,7 +63,7 @@ int main(int argc, char**) {
                     break;
                 case KVM_EXIT_MMIO:
                     std::cout << ("Attempted mmio\n");
-
+                    std::cout<< "Attempted write="<<(vcpuKvmRun->mmio.is_write?"yes":"no")<<" and at address="<<vcpuKvmRun->mmio.phys_addr<<std::endl;
                     vm._debugPrintRegisters();
                     loopingCpu = false;
                     break;

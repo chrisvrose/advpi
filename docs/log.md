@@ -78,3 +78,9 @@ Mostly refactoring.
 - TODO: think about timed interruptions?
 
 ## Week 5
+
+- Term - Interprocessing
+  - ARMv8 reference - Register mappings between AArch32 state and AArch64 state
+- Found: https://github.com/wheremyfoodat/kvm-arm32-on-arm64
+- it was the goddamn endianness
+  - https://github.com/wheremyfoodat/kvm-arm32-on-arm64/blob/main/src/main.cpp#L248
