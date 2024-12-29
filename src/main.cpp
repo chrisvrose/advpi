@@ -9,7 +9,7 @@
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 
-constexpr bool ENABLE_NISV_TO_USER = true;
+constexpr bool DEBUG_ENABLE_NISV_TO_USER = false;
 
 int main(int argc, char**) {
     std::cout << "Hello, from advpi!"<<std::endl;
@@ -18,14 +18,13 @@ int main(int argc, char**) {
 
     vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
 
-    if constexpr (ENABLE_NISV_TO_USER) {
+    if constexpr (DEBUG_ENABLE_NISV_TO_USER) {
         vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
     }
 
     bool loopingCpu = true;
 
     while (loopingCpu) {
-        std::cout << "Begin execution\n" << std::flush;
         std::variant<int, struct kvm_run*> run_state = vm.run();
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
             std::cout << "Failed to execute: Returned " << *failedToRun
@@ -57,13 +56,6 @@ int main(int argc, char**) {
                     loopingCpu = false;
                     break;
                 case KVM_EXIT_IO:
-                    // if (vcpuKvmRun->io.direction == KVM_EXIT_IO_OUT &&
-                    //     vcpuKvmRun->io.size == 1 && vcpuKvmRun->io.port ==
-                    //     0x3f8
-                    //     && vcpuKvmRun->io.count == 1) putchar(
-                    //         *(((char*)vcpuKvmRun) +
-                    //         vcpuKvmRun->io.data_offset));
-                    // else
                     errx(1, "unhandled KVM_EXIT_IO");
                     break;
                 case KVM_EXIT_MMIO:
@@ -72,15 +64,6 @@ int main(int argc, char**) {
                     vm._debugPrintRegisters();
                     loopingCpu = false;
                     break;
-                case KVM_EXIT_ARM_NISV: {
-                    uint64_t iss = vcpuKvmRun->arm_nisv.esr_iss;
-                    uint64_t fault_ipa = vcpuKvmRun->arm_nisv.fault_ipa;
-                    std::cout << "Broke for mem" << std::endl;
-                    printf("This is all that failed: %lx, %lx\n", iss,
-                           fault_ipa);
-                    vm._debugPrintRegisters();
-                    loopingCpu = false;
-                } break;
                 default:
                     printf("Why did we exit?, exit reason %d\n",
                            vcpuKvmRun->exit_reason);

@@ -2,7 +2,7 @@
 
 #include<arm_code.hpp>
 /**
-note: write this in big endian, because i write in big endian
+note: write this in big endian, because i read and write in big endian
 Code:
 nop
 nop
