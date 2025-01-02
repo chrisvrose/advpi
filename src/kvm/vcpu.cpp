@@ -9,6 +9,14 @@
 
 constexpr uint64_t REG_PREFIX = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
 
+template <int regNum>
+constexpr void _init_register_locations(uint64_t* loc){
+    if constexpr (regNum>0) {
+        loc[regNum-1] = REG_PREFIX |  KVM_REG_ARM_CORE_REG(regs.regs[0]);
+        _init_register_locations<regNum-1>(loc);
+    }
+}
+
 VCPU::VCPU(int kvmFd, int vmFd) {
     int cpuFd = ioctl(vmFd, KVM_CREATE_VCPU, 0);
     if (cpuFd == -1) {
@@ -24,6 +32,7 @@ VCPU::VCPU(int kvmFd, int vmFd) {
         (struct kvm_run*)mmap(NULL, this->kvmRunDetailsSize,
                               PROT_READ | PROT_WRITE, MAP_SHARED, cpuFd, 0);
     this->kvmRunStats = vcpuKvmRun;
+    _init_register_locations<16>(this->registerPointers);
     this->cpuInit(vmFd);
 }
 void VCPU::cpuInit(int vmFd) {
@@ -64,12 +73,10 @@ std::variant<int, struct kvm_run*> VCPU::run() {
 }
 
 uint64_t VCPU::getRegisterValue(int reg_number) {
-    uint64_t pcregId =
-        KVM_REG_ARM_CORE_REG(regs.regs[0]) + reg_number * sizeof(uint32_t);
-    uint64_t prefix = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_U64;
+
     uint64_t regCurrent;
     struct kvm_one_reg registerGetRequest = {
-        .id = prefix | pcregId, .addr = (unsigned long long)&regCurrent};
+        .id = this->registerPointers[reg_number], .addr = (unsigned long long)&regCurrent};
     int registerGetResult =
         ioctl(this->fd, KVM_GET_ONE_REG, &registerGetRequest);
 

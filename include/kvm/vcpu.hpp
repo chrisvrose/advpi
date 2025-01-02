@@ -6,6 +6,8 @@ class VCPU {
    private:
     int fd;
     int kvmRunDetailsSize;
+    /** R0 - R15 locations */
+    uint64_t registerPointers[16];
     struct kvm_run* kvmRunStats;
     void cpuInit(int vmFd);
    public:

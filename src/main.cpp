@@ -11,6 +11,10 @@
 
 constexpr bool DEBUG_ENABLE_NISV_TO_USER = false;
 
+uint64_t show_little_endian_byte(const unsigned char data[8]){
+    return *(uint64_t*)((void*)data);
+}
+
 int main(int argc, char**) {
     std::cout << "Hello, from advpi!"<<std::endl;
     std::unique_ptr<GBAMemory> mem(new GBAMemory());
@@ -59,8 +63,8 @@ int main(int argc, char**) {
                     errx(1, "unhandled KVM_EXIT_IO");
                     break;
                 case KVM_EXIT_MMIO:
-                    std::cout << ("Attempted mmio\n");
-                    std::cout<< "Attempted write="<<(vcpuKvmRun->mmio.is_write?"yes":"no")<<" and at address="<<vcpuKvmRun->mmio.phys_addr<<std::endl;
+                    std::cout << "Attempted mmio\n";
+                    std::cout<< "Attempted write="<<(vcpuKvmRun->mmio.is_write?"yes":"no")<<" of value="<<show_little_endian_byte(vcpuKvmRun->mmio.data)<<" and at address="<<vcpuKvmRun->mmio.phys_addr<<std::endl;
                     vm._debugPrintRegisters();
                     loopingCpu = false;
                     break;
