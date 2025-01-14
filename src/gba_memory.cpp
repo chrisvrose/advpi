@@ -64,15 +64,13 @@ GBAMemory::GBAMemory() {
 
     int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {
-        printf("could not open rom\n");
-        throw InitializationError("could not open rom");
+        throw InitializationError("could not open bios rom");
     }
     std::cout << ("Opened bios\n");
     void* biosRom =
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
 
     if (biosRom == MAP_FAILED) {
-        printf("mmap of bios failed\n");
         throw InitializationError("bios mmap failed");
     }
 
