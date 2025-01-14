@@ -74,7 +74,32 @@ Mostly refactoring.
 
 ## Week 4
 
+9/12
+
 - Refactoring to C++. Add exceptions, cleanup to same state as before refactor.
 - TODO: think about timed interruptions?
 
 ## Week 5
+
+16/12
+
+- nothing
+
+## Week 6
+
+23/12
+
+- Term - Interprocessing
+  - ARMv8 reference - Register mappings between AArch32 state and AArch64 state
+- Found: https://github.com/wheremyfoodat/kvm-arm32-on-arm64
+- it was the goddamn endianness
+  - https://github.com/wheremyfoodat/kvm-arm32-on-arm64/blob/main/src/main.cpp#L248
+- Read only pages will to MMIO
+
+Next steps:
+- add cart mapping
+
+## Week 7
+
+30/12
+-

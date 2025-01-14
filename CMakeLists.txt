@@ -14,4 +14,5 @@ add_executable(advpi
     src/gba_memory.cpp
     src/kvm/virtual_machine.cpp
     src/kvm/vcpu.cpp
+    src/gba/cart.cpp
 )

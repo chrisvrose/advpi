@@ -15,24 +15,25 @@ VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemory> memory,
     {
         int kvmId = open("/dev/kvm", O_RDWR);
         if (kvmId <= 0) {
-            std::cout << "Reported " << kvmId;
+            perror("Failed to open kvm");
             throw InitializationError("Failed to open KVM");
         }
         this->kvmFd = kvmId;
     }
     this->assertKvmFunctionalityAndExtensions();
-    {int vmfd = ioctl(this->kvmFd, KVM_CREATE_VM, 0);
-    if (vmfd < 0) {
-        printf("Could not create VM");
-        close(this->kvmFd);
-        throw InitializationError("Failed to open Virtual Machine");
+    {
+        int vmfd = ioctl(this->kvmFd, KVM_CREATE_VM, 0);
+        if (vmfd < 0) {
+            perror("Could not create VM");
+            close(this->kvmFd);
+            throw InitializationError("Failed to open Virtual Machine");
+        }
+        this->vmFd = vmfd;
     }
-    this->vmFd = vmfd;}
     this->mapMemory();
 
     this->cpu = new VCPU(this->kvmFd, this->vmFd);
     this->cpu->setPCValue(this->initialPcRegister);
-    // this->cpu->set
 }
 
 void VirtualMachine::assertKvmFunctionalityAndExtensions() {
@@ -49,9 +50,6 @@ void VirtualMachine::assertKvmFunctionalityAndExtensions() {
     this->assertKvmExtension(KVM_CAP_ONE_REG, "Single register G/S");
     this->assertKvmExtension(KVM_CAP_ARM_EL1_32BIT, "AArch32 execution");
     this->assertKvmExtension(KVM_CAP_READONLY_MEM, "Readonly pages");
-    // FIXME: not yet required
-    //
-    // this->assertKvmExtension(KVM_CAP_ARM_NISV_TO_USER, "Userland pagefault");
 }
 
 void VirtualMachine::_debugPrintRegisters() {
@@ -83,20 +81,19 @@ std::variant<int, struct kvm_run *> VirtualMachine::run() {
     return this->cpu->run();
 }
 
-void VirtualMachine::enableCPUCapability(uint32_t capability){
+void VirtualMachine::enableCPUCapability(uint32_t capability) {
     this->cpu->enableCPUCapability(capability);
 }
-void VirtualMachine::enableCapability(uint32_t capability){
+void VirtualMachine::enableCapability(uint32_t capability) {
     struct kvm_enable_cap kvmCapability = {
         .cap = capability
     };
-    int ret = ioctl(this->vmFd,KVM_ENABLE_CAP, &kvmCapability);
-    if(ret!=0){
-        throw InitializationError("Failed to enable VM capability "+std::to_string(capability));
+    int ret = ioctl(this->vmFd, KVM_ENABLE_CAP, &kvmCapability);
+    if (ret != 0) {
+        throw InitializationError("Failed to enable VM capability " +
+                                  std::to_string(capability));
     }
 }
-
-
 
 VirtualMachine::~VirtualMachine() {
     std::cout << "Closing the Virtual Machine\n";
