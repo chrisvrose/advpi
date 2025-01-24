@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-
+#include <cstdint>
 #include <exceptions/initialization_error.hpp>
 
 class GBAMemory {
