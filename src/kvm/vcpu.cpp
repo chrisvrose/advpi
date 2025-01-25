@@ -48,7 +48,6 @@ void VCPU::cpuInit(int vmFd) {
     }
 }
 // TODO
-// VCPU::~VCPU() {}
 void VCPU::setPCValue(uint64_t pcAddress) {
     uint64_t pcregId = KVM_REG_ARM_CORE_REG(regs.pc);
     struct kvm_one_reg registerSetRequest = {

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include<string>
 
-class Cart{
+class Cart {
     private:
     void* cartRom;
     public:
