@@ -12,7 +12,7 @@ constexpr uint64_t REG_PREFIX = KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_
 template <int regNum>
 constexpr void _init_register_locations(uint64_t* loc){
     if constexpr (regNum>0) {
-        loc[regNum-1] = REG_PREFIX |  KVM_REG_ARM_CORE_REG(regs.regs[0]);
+        loc[regNum-1] = REG_PREFIX |  KVM_REG_ARM_CORE_REG(regs.regs[regNum]);
         _init_register_locations<regNum-1>(loc);
     }
 }
