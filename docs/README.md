@@ -1,11 +1,16 @@
 # advpi
 
-Can an RPi can run as a Gameboy Advance CPU using KVM? 
+Can an RPi can run as a Gameboy Advance CPU (using KVM)? 
 
-The GBA CPU (ARM7TDMI) uses an instruction set (ArmV4+etc), which still works in the Cortex A53, which is present in the RPI (0 2W).
+The GBA CPU (ARM7TDMI) uses an instruction set (ArmV4-based), which still works in the Cortex A53, which is present in Raspberry Pis.
 
-GPU, I/O still need to be emulated, of course.
+Note: GPU, I/O still need to be emulated.
 
+### Progress
+
+- [X] Program execution
+- [ ] GPU/Display
+- [ ] I/O
 
 
 ### Considerations and assumptions for verification
