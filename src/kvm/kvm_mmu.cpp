@@ -4,6 +4,11 @@
 #include<string>
 #include<sys/ioctl.h>
 #include<exceptions/initialization_error.hpp>
+
+GBAKVMMMU::GBAKVMMMU(int vmFd) {
+    this->vmFd = vmFd;
+}
+
 void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request, const char* memorySegmentName) {
 
     auto perms = PROT_READ | PROT_EXEC;

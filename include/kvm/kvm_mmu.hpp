@@ -5,13 +5,6 @@
 #include<stdint.h>
 #include<linux/kvm.h>
 
-struct MemorySegment{
-    bool readOnly;
-    uint16_t slot;
-    uint32_t virtualMemoryStart;
-    uint32_t virtualMemoryLength;
-    void* virtualMemory;
-};
 struct MemorySegmentRequest{
     bool readOnly;
     uint32_t virtualMemoryStart;
@@ -36,6 +29,6 @@ class GBAKVMMMU {
     GBAKVMMMU(int vmFD);
     void registerMemoryPage(struct MemorySegmentRequest,
                             const char* memorySegmentName);
-
+    void registerMMap(struct MemorySegmentRequestMmap, const char* memorySegmentName);
     char _debug_getByteAt(uint32_t virtualAddress);
 };
