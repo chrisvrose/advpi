@@ -30,9 +30,10 @@ VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemory> memory,
         }
         this->vmFd = vmfd;
     }
+    this->mmu = std::make_shared<GBAKVMMMU>(this->vmFd);
     this->mapMemory();
 
-    this->cpu = new VCPU(this->kvmFd, this->vmFd);
+    this->cpu = std::make_shared<VCPU>(this->kvmFd, this->vmFd);
     this->cpu->setPCValue(this->initialPcRegister);
 }
 
@@ -99,5 +100,4 @@ VirtualMachine::~VirtualMachine() {
     std::cout << "Closing the Virtual Machine\n";
     close(this->vmFd);
     close(this->kvmFd);
-    delete this->cpu;
 }

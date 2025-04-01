@@ -79,7 +79,7 @@ GBAMemory::GBAMemory() {
     this->bios = biosRom;
 }
 
-void GBAMemory::debug_memory(void* memory, int size) {
+void GBAMemory::_debug_memory(void* memory, int size) {
     char* memoryChar = (char*)memory;
     printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1],
            memoryChar[2], memoryChar[3]);

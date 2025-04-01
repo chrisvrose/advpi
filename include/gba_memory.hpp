@@ -9,7 +9,7 @@ class GBAMemory {
     void* bios;
     int biosFd;
 
-    void debug_memory(void* memory, int size);
+    void _debug_memory(void* memory, int size);
     bool mapSegmentToMemory(int vmFd, void* hostAddress, uint64_t addressSize,
                             uint64_t vmAddress, bool readOnly, uint32_t slot);
 

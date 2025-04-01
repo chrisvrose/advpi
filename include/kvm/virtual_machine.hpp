@@ -3,8 +3,10 @@
 #include <kvm/vcpu.hpp>
 #include <optional>
 #include <memory>
-
+#include <memory>
 #include <linux/kvm.h>
+#include<kvm/kvm_mmu.hpp>
+
 
 class VirtualMachine {
    private:
@@ -12,7 +14,8 @@ class VirtualMachine {
     int vmFd;
     std::unique_ptr<GBAMemory> memory;
     uint64_t initialPcRegister;
-    VCPU* cpu;
+    std::shared_ptr<VCPU> cpu;
+    std::shared_ptr<GBAKVMMMU> mmu;
     bool verifyExtension();
     void assertKvmFunctionalityAndExtensions();
     void assertKvmExtension(int capability, const char* capabilityName);

@@ -1,10 +1,10 @@
+#pragma once
+#include <cstdint>
+#include<string>
 
 /**
  Loads a rom from the memory and provides mapping functionality.
 */
-#include <cstdint>
-#include<string>
-
 class Cart {
     private:
     void* cartRom;

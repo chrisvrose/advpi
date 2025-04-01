@@ -2,6 +2,7 @@
     "files.associations": {
         "*.json": "jsonc",
         "*.rmd": "markdown",
-        "mman.h": "c"
+        "mman.h": "c",
+        "string": "cpp"
     }
 }
