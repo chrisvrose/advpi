@@ -2,21 +2,18 @@
 #include <cstddef>
 #include <cstdint>
 #include <exceptions/initialization_error.hpp>
-
+#include<memory>
+#include<kvm/kvm_mmu.hpp>
 class GBAMemory {
    private:
-    void* onboardMemory;
     void* bios;
     int biosFd;
 
     void _debug_memory(void* memory, int size);
-    bool mapSegmentToMemory(int vmFd, void* hostAddress, uint64_t addressSize,
-                            uint64_t vmAddress, bool readOnly, uint32_t slot);
-
    public:
     GBAMemory();
-    bool mapToVM(int vmFd);
-    void _debug_copyToWorkVm(void* code, size_t codeLen);
+    bool mapToVM(std::shared_ptr<GBAKVMMMU> mmu);
+    // void _debug_copyToWorkVm(void* code, size_t codeLen);
     ~GBAMemory();
 };
 

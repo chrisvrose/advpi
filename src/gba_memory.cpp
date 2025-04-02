@@ -53,15 +53,6 @@ const int ONCHIP_MEM_START = 0x03'000'000;
 const int ONCHIP_MEM_SIZE = 0x8'000;
 
 GBAMemory::GBAMemory() {
-    void* onBoardMemory =
-        mmap(NULL, ONBOARD_MEM_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
-             MAP_SHARED | MAP_ANONYMOUS, 0, 0);
-
-    if (onBoardMemory == MAP_FAILED) {
-        perror("mmap of physical memory failed\n");
-        throw InitializationError("MMap failed");
-    }
-
     int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {
         throw InitializationError("could not open bios rom");
@@ -74,7 +65,6 @@ GBAMemory::GBAMemory() {
         throw InitializationError("bios mmap failed");
     }
 
-    this->onboardMemory = onBoardMemory;
     this->biosFd = biosFd;
     this->bios = biosRom;
 }
@@ -89,39 +79,27 @@ void GBAMemory::_debug_memory(void* memory, int size) {
 /**
  * Copy code array into a buffer
  */
-void GBAMemory::_debug_copyToWorkVm(void* code, size_t codeLen) {
-    memcpy(this->onboardMemory, code, codeLen);
-}
+// void GBAMemory::_debug_copyToWorkVm(void* code, size_t codeLen) {
+//     memcpy(this->onboardMemory, code, codeLen);
+// }
 
-bool GBAMemory::mapSegmentToMemory(int vmFd, void* hostAddress,
-                                   uint64_t addressSize, uint64_t vmAddress,
-                                   bool readOnly, uint32_t slot) {
-
-    struct kvm_userspace_memory_region memory_region = {
-        .slot = slot,
-        .flags = static_cast<__u32>((readOnly ? KVM_MEM_READONLY : 0)),
-        .guest_phys_addr = vmAddress,
-        .memory_size = addressSize,
-        .userspace_addr = (unsigned long long)hostAddress,
+bool GBAMemory::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) { 
+    struct MemorySegmentRequest onboardMemoryAllocationRequest = {
+        .readOnly = false,
+        .virtualMemoryStart=ONBOARD_MEM_START,
+        .virtualMemoryLength=ONBOARD_MEM_SIZE
+    } ;
+    mmu->registerMemoryPage(onboardMemoryAllocationRequest,"Onboard Memory");
+    struct MemorySegmentRequest bioSMemAllocationRequest = {
+        .readOnly = true,
+        .virtualMemoryStart=BIOS_START,
+        .virtualMemoryLength=BIOS_SIZE,
     };
-    int memorySetRequest =
-        ioctl(vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
-    return memorySetRequest == 0;
-}
-
-bool GBAMemory::mapToVM(int vmFd) {
-    bool y =
-        this->mapSegmentToMemory(vmFd, this->bios, BIOS_SIZE, BIOS_START, true, 0);
-    if(!y) return false;
-    bool x = this->mapSegmentToMemory(vmFd, this->onboardMemory,
-                                      ONBOARD_MEM_SIZE, ONBOARD_MEM_START, false, 1);
-    if(!x) return false;
+    mmu->registerMemoryPage(bioSMemAllocationRequest, this->bios, "BIOS");
+    
     return true;
 }
 GBAMemory::~GBAMemory() {
-    if (this->onboardMemory != NULL) {
-        munmap(this->onboardMemory, ONBOARD_MEM_SIZE);
-    }
     if (this->bios != NULL) {
         munmap(this->bios, BIOS_SIZE);
     }

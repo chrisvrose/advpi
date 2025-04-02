@@ -1,24 +1,23 @@
 
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+
+#include <exceptions/initialization_error.hpp>
 #include <kvm/kvm_mmu.hpp>
-#include<sys/mman.h>
-#include<string>
-#include<sys/ioctl.h>
-#include<exceptions/initialization_error.hpp>
+#include <string>
 
-GBAKVMMMU::GBAKVMMMU(int vmFd) {
-    this->vmFd = vmFd;
-}
+GBAKVMMMU::GBAKVMMMU(int vmFd) { this->vmFd = vmFd; }
 
-void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request, const char* memorySegmentName) {
-
+void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request,
+                                   const char* memorySegmentName) {
     auto perms = PROT_READ | PROT_EXEC;
-    if(request.readOnly) perms |= PROT_WRITE;
+    if (request.readOnly) perms |= PROT_WRITE;
 
-    void* initializedMemory =
-        mmap(NULL, request.virtualMemoryLength, perms,
-             MAP_SHARED | MAP_ANONYMOUS, 0, 0);
+    void* initializedMemory = mmap(NULL, request.virtualMemoryLength, perms,
+                                   MAP_SHARED | MAP_ANONYMOUS, 0, 0);
     if (initializedMemory == MAP_FAILED) {
-        std::string s = std::string("mmap failed: ").append(memorySegmentName).append("\n");
+        std::string s =
+            std::string("mmap failed: ").append(memorySegmentName).append("\n");
         perror(s.c_str());
         throw InitializationError("MMap failed");
     }
@@ -28,7 +27,19 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request, const ch
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
 
-void GBAKVMMMU::mapToVM(int slot, MemorySegmentRequest& request,
+void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request, void* memorySegment,
+                             const char* memorySegmentName) {
+    auto perms = PROT_READ | PROT_EXEC;
+    if (request.readOnly) perms |= PROT_WRITE;
+
+    void* initializedMemory = memorySegment;
+
+    auto slot = this->mappingCounter++;
+
+    mapToVM(slot, request, initializedMemory, memorySegmentName);
+}
+
+void GBAKVMMMU::mapToVM(unsigned short slot, MemorySegmentRequest& request,
                         void* onBoardMemory, const char* memorySegmentName) {
     struct kvm_userspace_memory_region memory_region = {
         .slot = slot,
