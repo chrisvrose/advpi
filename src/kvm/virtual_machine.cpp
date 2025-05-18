@@ -8,7 +8,7 @@
 #include <kvm/virtual_machine.hpp>
 #include <memory>
 
-VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemory> memory,
+VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemoryMapper> memory,
                                uint64_t initialPcRegister) {
     this->memory = std::move(memory);
     this->initialPcRegister = initialPcRegister;
@@ -60,7 +60,7 @@ void VirtualMachine::_debugPrintRegisters() {
     }
 }
 void VirtualMachine::_debugSetWorkRam(void *code, size_t codeLen) {
-    this->memory->_debug_copyToWorkVm(code, codeLen);
+    this->mmu->_debug_writeToMemoryAtSlot(0,code,codeLen);
 }
 
 void VirtualMachine::assertKvmExtension(int capability,
@@ -73,9 +73,7 @@ void VirtualMachine::assertKvmExtension(int capability,
     }
 }
 void VirtualMachine::mapMemory() {
-    if (!this->memory->mapToVM(this->vmFd)) {
-        throw InitializationError("Failed to map memory");
-    }
+    this->memory->mapToVM(this->mmu);
 }
 
 std::variant<int, struct kvm_run *> VirtualMachine::run() {

@@ -23,7 +23,7 @@ class VirtualMachine {
     void mapMemory();
    public:
 
-    // void _debugSetWorkRam(void* code, size_t codeLen);
+    void _debugSetWorkRam(void* code, size_t codeLen);
     void _debugPrintRegisters();
     VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
 

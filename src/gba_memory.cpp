@@ -77,13 +77,6 @@ void GBAMemoryMapper::_debug_memory(void* memory, int size) {
     printf("Last byte: %x\n", memoryChar[size - 1]);
 }
 
-/**
- * Copy code array into a buffer
- */
-// void GBAMemory::_debug_copyToWorkVm(void* code, size_t codeLen) {
-//     memcpy(this->onboardMemory, code, codeLen);
-// }
-
 void GBAMemoryMapper::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) {
     struct MemorySegmentRequest onboardMemoryAllocationRequest = {
         .readOnly = false,

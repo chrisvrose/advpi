@@ -12,6 +12,7 @@
 #include <sdl/sdl2.hpp>
 
 constexpr bool DEBUG_ENABLE_NISV_TO_USER = false;
+constexpr bool TEST_CREATE_WINDOW = false;
 
 constexpr uint32_t WINDOW_WIDTH = 300;
 constexpr uint32_t WINDOW_HEIGHT = 200;
@@ -22,31 +23,34 @@ uint64_t show_little_endian_byte(const unsigned char data[8]){
 }
 
 int main(int argc, char**) {
-    assertSdl2Initialization();
-    SDL_Window* window = NULL;
-    SDL_Surface* screenSurface = NULL;
-    window = SDL_CreateWindow(
-			    "hello_sdl2",
-			    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-			    WINDOW_WIDTH, WINDOW_HEIGHT,
-			    SDL_WINDOW_HIDDEN
-			    );
-    printf("Created window with id %p\n",window);
-    if (window == NULL) {
-        fprintf(stderr, "could not create window: %s\n", SDL_GetError());
-        return 1;
+    if(TEST_CREATE_WINDOW){
+
+        assertSdl2Initialization();
+        SDL_Window* window = NULL;
+        SDL_Surface* screenSurface = NULL;
+        window = SDL_CreateWindow(
+    			    "hello_sdl2",
+    			    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    			    WINDOW_WIDTH, WINDOW_HEIGHT,
+    			    SDL_WINDOW_HIDDEN
+    			    );
+        printf("Created window with id %p\n",window);
+        if (window == NULL) {
+            fprintf(stderr, "could not create window: %s\n", SDL_GetError());
+            return 1;
+        }
+        screenSurface = SDL_GetWindowSurface(window);
+        SDL_SetWindowTitle(window, WINDOW_TITLE);
+        SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+        SDL_UpdateWindowSurface(window);
+        SDL_ShowWindow(window);
+        SDL_Delay(10'000);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
     }
-    screenSurface = SDL_GetWindowSurface(window);
-    SDL_SetWindowTitle(window, WINDOW_TITLE);
-    SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-    SDL_UpdateWindowSurface(window);
-    SDL_ShowWindow(window);
-    SDL_Delay(10'000);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 
     std::cout << "Hello, from advpi!"<<std::endl;
-    std::unique_ptr<GBAMemory> mem(new GBAMemory());
+    std::unique_ptr<GBAMemoryMapper> mem(new GBAMemoryMapper());
     VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
 
     vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
@@ -59,6 +63,7 @@ int main(int argc, char**) {
 
     while (loopingCpu) {
         std::variant<int, struct kvm_run*> run_state = vm.run();
+        std::cout<<"Debug: Starting run!"<<std::endl;
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
             std::cout << "Failed to execute: Returned " << *failedToRun
                       << std::endl;
