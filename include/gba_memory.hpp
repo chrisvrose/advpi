@@ -4,17 +4,16 @@
 #include <exceptions/initialization_error.hpp>
 #include<memory>
 #include<kvm/kvm_mmu.hpp>
-class GBAMemory {
+class GBAMemoryMapper {
    private:
     void* bios;
     int biosFd;
 
     void _debug_memory(void* memory, int size);
    public:
-    GBAMemory();
-    bool mapToVM(std::shared_ptr<GBAKVMMMU> mmu);
-    // void _debug_copyToWorkVm(void* code, size_t codeLen);
-    ~GBAMemory();
+    GBAMemoryMapper();
+    void mapToVM(std::shared_ptr<GBAKVMMMU> mmu);
+    ~GBAMemoryMapper();
 };
 
 extern const int BIOS_START;

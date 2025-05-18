@@ -8,6 +8,7 @@
 #include <cstring>
 #include <gba_memory.hpp>
 #include <iostream>
+#include "kvm/kvm_mmu.hpp"
 /*
 Memory map
 
@@ -52,7 +53,7 @@ const int ONBOARD_MEM_SIZE = 0x40'000;
 const int ONCHIP_MEM_START = 0x03'000'000;
 const int ONCHIP_MEM_SIZE = 0x8'000;
 
-GBAMemory::GBAMemory() {
+GBAMemoryMapper::GBAMemoryMapper() {
     int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {
         throw InitializationError("could not open bios rom");
@@ -69,7 +70,7 @@ GBAMemory::GBAMemory() {
     this->bios = biosRom;
 }
 
-void GBAMemory::_debug_memory(void* memory, int size) {
+void GBAMemoryMapper::_debug_memory(void* memory, int size) {
     char* memoryChar = (char*)memory;
     printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1],
            memoryChar[2], memoryChar[3]);
@@ -83,7 +84,7 @@ void GBAMemory::_debug_memory(void* memory, int size) {
 //     memcpy(this->onboardMemory, code, codeLen);
 // }
 
-bool GBAMemory::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) { 
+void GBAMemoryMapper::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) {
     struct MemorySegmentRequest onboardMemoryAllocationRequest = {
         .readOnly = false,
         .virtualMemoryStart=ONBOARD_MEM_START,
@@ -96,10 +97,15 @@ bool GBAMemory::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) {
         .virtualMemoryLength=BIOS_SIZE,
     };
     mmu->registerMemoryPage(bioSMemAllocationRequest, this->bios, "BIOS");
-    
-    return true;
+
+    struct MemorySegmentRequest onchipMemAllocationRequest = {
+        .readOnly = false,
+        .virtualMemoryStart=ONCHIP_MEM_START,
+        .virtualMemoryLength=ONCHIP_MEM_SIZE
+    };
+    mmu->registerMemoryPage(onchipMemAllocationRequest,"Onchip Memory");
 }
-GBAMemory::~GBAMemory() {
+GBAMemoryMapper::~GBAMemoryMapper() {
     if (this->bios != NULL) {
         munmap(this->bios, BIOS_SIZE);
     }

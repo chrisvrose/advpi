@@ -24,11 +24,13 @@ class GBAKVMMMU {
     /**
      * Allocate and Register Zeroed Memory Page
      */
-    void registerMemoryPage(struct MemorySegmentRequest,
+    void registerMemoryPage(struct MemorySegmentRequest&,
                             const char* memorySegmentName);
     /**
      * Allocate and Register Provided Memory Page
      */
-    void registerMemoryPage(struct MemorySegmentRequest, void* memorySegment, const char* memorySegmentName);
+    void registerMemoryPage(struct MemorySegmentRequest&, void* memorySegment, const char* memorySegmentName);
     char _debug_getByteAt(uint32_t virtualAddress);
+
+    void writeToMemoryPage(void* memoryToWrite, int sizeOfMemory);
 };

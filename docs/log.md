@@ -107,3 +107,9 @@ Next steps:
 ## Week x
 - was printing wrong register values. fixed template.
 - cart may not be useful. Display would be better.
+
+---
+
+Week ?
+
+- found https://problemkaputt.de/gbatek.htm

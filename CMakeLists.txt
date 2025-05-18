@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(advpi VERSION 0.1.0 LANGUAGES CXX)
+project(advpi VERSION 0.1.0 LANGUAGES CXX ASM)
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -21,5 +21,8 @@ add_executable(advpi
     src/kvm/kvm_mmu.cpp
 )
 
+#add_executable(test_src_one.bin test_src/one.S)
+#target_compile_options(test_src_one.bin PUBLIC
+#    -Wall -Xlinker --oformat=binary)
 
 target_link_libraries(advpi PRIVATE SDL2::SDL2)

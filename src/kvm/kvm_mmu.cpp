@@ -2,13 +2,15 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include <cstdio>
 #include <exceptions/initialization_error.hpp>
 #include <kvm/kvm_mmu.hpp>
 #include <string>
+#include<iostream>
 
 GBAKVMMMU::GBAKVMMMU(int vmFd) { this->vmFd = vmFd; }
 
-void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request,
+void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request,
                                    const char* memorySegmentName) {
     auto perms = PROT_READ | PROT_EXEC;
     if (request.readOnly) perms |= PROT_WRITE;
@@ -27,14 +29,14 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request,
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
 
-void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest request, void* memorySegment,
+void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request, void* memorySegment,
                              const char* memorySegmentName) {
     auto perms = PROT_READ | PROT_EXEC;
     if (request.readOnly) perms |= PROT_WRITE;
 
     void* initializedMemory = memorySegment;
-
     auto slot = this->mappingCounter++;
+    std::cout<<"Debug: Preparing with slot "<<slot<<std::endl;
 
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
@@ -50,10 +52,9 @@ void GBAKVMMMU::mapToVM(unsigned short slot, MemorySegmentRequest& request,
         .userspace_addr = (size_t)onBoardMemory};
     int memorySetRequest =
         ioctl(this->vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
-    if (memorySegmentName != 0) {
-        std::string error =
-            std::string("Failed to set KVM Memory segment at ") +
-            std::to_string(request.virtualMemoryStart);
-        throw new InitializationError(error.c_str());
+    if (memorySetRequest != 0) {
+        char x[256] = {0};
+        snprintf(x, 254, "Failed to set memory segment at %p for slot %d, named %.64s",request.virtualMemoryStart,slot, memorySegmentName);
+        throw InitializationError(x);
     }
 }

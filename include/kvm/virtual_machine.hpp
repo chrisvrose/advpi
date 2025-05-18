@@ -12,7 +12,7 @@ class VirtualMachine {
    private:
     int kvmFd;
     int vmFd;
-    std::unique_ptr<GBAMemory> memory;
+    std::unique_ptr<GBAMemoryMapper> memory;
     uint64_t initialPcRegister;
     std::shared_ptr<VCPU> cpu;
     std::shared_ptr<GBAKVMMMU> mmu;
@@ -23,9 +23,9 @@ class VirtualMachine {
     void mapMemory();
    public:
 
-    void _debugSetWorkRam(void* code, size_t codeLen);
+    // void _debugSetWorkRam(void* code, size_t codeLen);
     void _debugPrintRegisters();
-    VirtualMachine(std::unique_ptr<GBAMemory>,uint64_t);
+    VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
 
     std::variant<int, struct kvm_run *> run();
 
