@@ -19,6 +19,7 @@ add_executable(advpi
     src/gba/cart.cpp
     src/sdl/sdl2.cpp
     src/kvm/kvm_mmu.cpp
+    src/gba/io/mmioHandler.cpp
 )
 
 #add_executable(test_src_one.bin test_src/one.S)
