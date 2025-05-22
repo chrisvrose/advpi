@@ -53,12 +53,17 @@ int main(int argc, char**) {
     std::unique_ptr<GBAMemoryMapper> mem(new GBAMemoryMapper());
     VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
 
-    vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
+    // vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
+    constexpr unsigned char programSize = 4*7;
+    auto programText = readProgram("one.bin",programSize);
+    vm._debugSetWorkRam(programText.data(),programSize);
+
 
     if constexpr (DEBUG_ENABLE_NISV_TO_USER) {
         vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
     }
 
+    int counts = 2;
     bool loopingCpu = true;
 
     while (loopingCpu) {
@@ -71,7 +76,7 @@ int main(int argc, char**) {
             loopingCpu = false;
         } else if (struct kvm_run** run_state_result_ptr =
                        std::get_if<struct kvm_run*>(&run_state)) {
-            const struct kvm_run* vcpuKvmRun = *run_state_result_ptr;
+            struct kvm_run* vcpuKvmRun = *run_state_result_ptr;
             switch (vcpuKvmRun->exit_reason) {
                 case KVM_EXIT_FAIL_ENTRY:
                     errx(1,
@@ -97,10 +102,16 @@ int main(int argc, char**) {
                     errx(1, "unhandled KVM_EXIT_IO");
                     break;
                 case KVM_EXIT_MMIO:
-                    std::cout << "Attempted mmio\n";
-                    std::cout<< "Attempted write="<<(vcpuKvmRun->mmio.is_write?"yes":"no")<<" of value="<<show_little_endian_byte(vcpuKvmRun->mmio.data)<<" and at address="<<vcpuKvmRun->mmio.phys_addr<<std::endl;
-                    vm._debugPrintRegisters();
-                    loopingCpu = false;
+                    std::cout << "NOTE:Attempted mmio\n";
+                    if(!vcpuKvmRun->mmio.is_write) {
+                        for (int i=0;i<8;i++)
+                            vcpuKvmRun->mmio.data[i] = i;
+                    }
+                    std::cout<< "Attempted write="<<std::hex<<(vcpuKvmRun->mmio.is_write?"yes":"no")<<" of value="<<show_little_endian_byte(vcpuKvmRun->mmio.data)<<" and at address=0x"<<std::hex<<vcpuKvmRun->mmio.phys_addr<<std::endl;
+                    // vm._debugPrintRegisters();
+                    counts--;
+                    if(counts==0)
+                        loopingCpu = false;
                     break;
                 default:
                     printf("Why did we exit?, exit reason %d\n",

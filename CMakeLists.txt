@@ -23,11 +23,18 @@ add_executable(advpi
 )
 
 add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/one.bin
-    COMMAND as -o ${CMAKE_BINARY_DIR}/one.bin ${CMAKE_SOURCE_DIR}/test_src/one.S
+    OUTPUT ${CMAKE_BINARY_DIR}/one.intermediate.bin
+    COMMAND arm-none-eabi-as -o ${CMAKE_BINARY_DIR}/one.intermediate.bin ${CMAKE_SOURCE_DIR}/test_src/one.S
     DEPENDS test_src/one.S
-    COMMENT "Assembling raw binary from one.S"
+    COMMENT "Assembling ELF from one.S"
 )
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/one.bin
+    COMMAND objcopy -O binary ${CMAKE_BINARY_DIR}/one.intermediate.bin ${CMAKE_BINARY_DIR}/one.bin
+    DEPENDS ${CMAKE_BINARY_DIR}/one.intermediate.bin
+    COMMENT "Assembling raw binary for one.S"
+)
+
 add_custom_target(build_raw_binary ALL
     DEPENDS one.bin
 )

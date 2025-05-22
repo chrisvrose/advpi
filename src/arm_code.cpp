@@ -1,6 +1,7 @@
 
 
 #include<arm_code.hpp>
+#include <fstream>
 /**
 note: write this in big endian, because i read and write in big endian
 Code:
@@ -27,3 +28,12 @@ uint32_t CODE[] = {
 };
 
 short CODE_LENGTH = sizeof(CODE);
+
+
+std::vector<unsigned char> readProgram(const char* programName, const int codeLen){
+    std::ifstream file(programName,std::ios::binary);
+    unsigned char ve[codeLen];
+    file.read((char*)ve, codeLen);
+    file.close();
+    return std::vector(ve,ve+codeLen);
+}
