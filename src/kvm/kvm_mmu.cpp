@@ -95,6 +95,7 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
 }
 
 void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
+    printf("Info: Registered MMIO Handler\n");
     auto startAddr = handler.start;
     this->mmioHandlers[startAddr] = handler;
 }
@@ -102,15 +103,34 @@ void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
 void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value){
     this->findMMIOHandler(position)->handler->writeQuadWord(position,value);
 }
+uint32_t GBAKVMMMU::dispatchMMIOReadRequest(uint32_t position){
+    return this->findMMIOHandler(position)->handler->read(position);
+}
 
 std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
-    // the page preceeding this address
-    auto keyIter = this->mmioHandlers.lower_bound(position);
-    if(keyIter==this->mmioHandlers.end()){return std::nullopt;}
-    else {
-        // length match
-        if(keyIter->first+keyIter->second.length > position) return std::nullopt;
-        return std::optional((keyIter->second));
+    for(auto entry:this->mmioHandlers){
+        auto val = entry.second;
+        printf("Trace: %p %p %p\n",val.start,val.length,val.start+val.length);
+        if(val.start<=position && (val.start+val.length)>position){
+            return std::optional(val);
+        }
     }
-    // throw "not yet ready";
+    printf("WARN: Found no handler for %p!\n",position);
+    return std::nullopt;
 }
+// std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
+//     // the page preceeding this address
+//     printf("Debug: Looking for handler at %p\n",position);
+//     auto keyIter = this->mmioHandlers.lower_bound(position);
+//     if(keyIter==this->mmioHandlers.end()){
+//         throw InitializationError( "no handler");
+//         return std::nullopt;
+//     }
+//     else {
+//         // length match
+//         if(keyIter->first+keyIter->second.length > position){
+//            throw InitializationError("handler mismatch"); return std::nullopt;}
+//         return std::optional((keyIter->second));
+//     }
+//     // throw "not yet ready";
+// }

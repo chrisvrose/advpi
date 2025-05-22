@@ -4,13 +4,14 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <exceptions/initialization_error.hpp>
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
 #include "gba/io/mmioHandler.hpp"
 
-uint64_t show_little_endian_byte(const unsigned char data[8]){
+inline uint64_t show_little_endian_byte(const unsigned char data[8]){
     return *(uint64_t*)((void*)data);
 }
 
@@ -91,6 +92,7 @@ void VirtualMachine::attachMMIOHandlers() {
         .length = 0x1000,
         .handler = std::make_shared<LoggingHandler>()
     };
+    this->mmu->registerMMIOHandler(logHandler);
 }
 
 std::variant<int, struct kvm_run *> VirtualMachine::run() {
@@ -150,22 +152,22 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
                 case KVM_EXIT_IO:
                     errx(1, "unhandled KVM_EXIT_IO");
                     break;
-                case KVM_EXIT_MMIO:
+                case KVM_EXIT_MMIO: {
+                    const bool isWrite = vcpuKvmRun->mmio.is_write;
                     std::cout << "NOTE:Attempted mmio\n";
-                    if (!vcpuKvmRun->mmio.is_write) {
-                        for (int i = 0; i < 8; i++)
-                            vcpuKvmRun->mmio.data[i] = i;
-                    }
+
+                    this->mmioOperation(vcpuKvmRun->mmio.is_write,vcpuKvmRun->mmio.phys_addr,vcpuKvmRun->mmio.len,vcpuKvmRun->mmio.data);
                     std::cout << "Attempted write=" << std::hex
-                              << (vcpuKvmRun->mmio.is_write ? "yes" : "no")
+                              << (isWrite ? "yes" : "no")
                               << " of value="
                               << show_little_endian_byte(vcpuKvmRun->mmio.data)
                               << " and at address=0x" << std::hex
                               << vcpuKvmRun->mmio.phys_addr << std::endl;
                     // vm._debugPrintRegisters();
                     counts--;
+
                     if (counts == 0) loopingCpu = false;
-                    break;
+                    break;}
                 default:
                     printf("Why did we exit?, exit reason %d\n",
                            vcpuKvmRun->exit_reason);
@@ -173,6 +175,27 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
         }
     }
 }
+inline uint32_t getLittleEndianValue(int len, unsigned char* dataElements){
+    const int BYTE_LIM = 8;
+    uint32_t sum=0;
+    for (int i=0;i<BYTE_LIM&&i<len;i++){
+        sum<<=8;
+        sum|=dataElements[i];
+    }
+    return sum;
+}
+inline void setLittleEndianValue(int len, unsigned char* dataElements,uint32_t value){
+    std::memcpy(dataElements, ((char*)&value)+(sizeof(uint32_t)-len),len);
+}
+void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, int len, unsigned char* dataElements){
+    if(isWrite){
+        uint32_t data = getLittleEndianValue(len,dataElements);
+        this->mmu->dispatchMMIOWriteRequest(phyAddress,data);
+    }
+    auto x = this->mmu->dispatchMMIOReadRequest(phyAddress);
+    setLittleEndianValue(len,dataElements, x);
+}
+
 
 VirtualMachine::~VirtualMachine() {
     std::cout << "Closing the Virtual Machine\n";

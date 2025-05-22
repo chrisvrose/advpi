@@ -7,5 +7,5 @@ uint32_t LoggingHandler::read(uint32_t readPosition){
 }
 
 void LoggingHandler::writeQuadWord(uint32_t readPosition, uint32_t writeValue) {
-    printf("Writing @%u: %x",readPosition,writeValue);
+    printf("Writing @%u: %x\n",readPosition,writeValue);
 }
