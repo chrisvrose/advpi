@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <exceptions/initialization_error.hpp>
@@ -91,4 +92,25 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
 
 
 
+}
+
+void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
+    auto startAddr = handler.start;
+    this->mmioHandlers[startAddr] = handler;
+}
+
+void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value){
+    this->findMMIOHandler(position)->handler->writeQuadWord(position,value);
+}
+
+std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
+    // the page preceeding this address
+    auto keyIter = this->mmioHandlers.lower_bound(position);
+    if(keyIter==this->mmioHandlers.end()){return std::nullopt;}
+    else {
+        // length match
+        if(keyIter->first+keyIter->second.length > position) return std::nullopt;
+        return std::optional((keyIter->second));
+    }
+    // throw "not yet ready";
 }
