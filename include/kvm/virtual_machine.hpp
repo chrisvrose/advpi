@@ -24,13 +24,13 @@ class VirtualMachine {
 
     // mmio sections
     void attachMMIOHandlers();
+    std::variant<int, struct kvm_run *> run();
    public:
-
+    void startLoop(std::optional<int> numLoops);
     void _debugSetWorkRam(void* code, size_t codeLen);
     void _debugPrintRegisters();
     VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
 
-    std::variant<int, struct kvm_run *> run();
 
     void enableCapability(uint32_t capabilty);
     void enableCPUCapability(uint32_t capabilty);
