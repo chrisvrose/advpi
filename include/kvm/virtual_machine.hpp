@@ -21,6 +21,9 @@ class VirtualMachine {
     void assertKvmExtension(int capability, const char* capabilityName);
     //memory sections
     void mapMemory();
+
+    // mmio sections
+    void attachMMIOHandlers();
    public:
 
     void _debugSetWorkRam(void* code, size_t codeLen);

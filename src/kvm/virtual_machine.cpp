@@ -7,6 +7,7 @@
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
+#include "gba/io/mmioHandler.hpp"
 
 VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemoryMapper> memory,
                                uint64_t initialPcRegister) {
@@ -74,6 +75,16 @@ void VirtualMachine::assertKvmExtension(int capability,
 }
 void VirtualMachine::mapMemory() {
     this->memory->mapToVM(this->mmu);
+    this->attachMMIOHandlers();
+}
+
+void VirtualMachine::attachMMIOHandlers() {
+    std::cout<<"Debug: Attaching MMIO Handlers"<<std::endl;
+    struct MemorySegmentHandler logHandler = {
+        .start = 0x4000,
+        .length = 0x1000,
+        .handler = std::make_shared<LoggingHandler>()
+    };
 }
 
 std::variant<int, struct kvm_run *> VirtualMachine::run() {
