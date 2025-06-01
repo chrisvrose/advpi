@@ -1,7 +1,9 @@
 #pragma once
 #include <cstdint>
 
-
+/**
+Todo: Very approximate
+*/
 class MMIOHandler{
     public:
     virtual uint32_t read(uint32_t readValue)=0;

@@ -67,7 +67,7 @@ void VirtualMachine::_debugPrintRegisters() {
         //           << std::endl;
     }
 }
-void VirtualMachine::_debugSetWorkRam(void *code, size_t codeLen) {
+void VirtualMachine::_debugSetOnBoardRamSegmentBytes(void *code, size_t codeLen) {
     this->mmu->_debug_writeToMemoryAtSlot(0,code,codeLen);
 }
 

@@ -28,7 +28,7 @@ class VirtualMachine {
     void mmioOperation(bool isWrite, uint32_t phyAddress, int len, unsigned char* dataElements);
    public:
     void startLoop(std::optional<int> numLoops);
-    void _debugSetWorkRam(void* code, size_t codeLen);
+    void _debugSetOnBoardRamSegmentBytes(void* code, size_t codeLen);
     void _debugPrintRegisters();
     VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
 

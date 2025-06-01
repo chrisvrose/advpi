@@ -2,6 +2,9 @@
 
 #include<arm_code.hpp>
 #include <fstream>
+#include <ios>
+#include <string>
+#include "exceptions/initialization_error.hpp"
 /**
 note: write this in big endian, because i read and write in big endian
 Code:
@@ -30,10 +33,17 @@ uint32_t CODE[] = {
 short CODE_LENGTH = sizeof(CODE);
 
 
-std::vector<unsigned char> readProgram(const char* programName, const int codeLen){
+std::vector<unsigned char> readProgram(const char* programName, const unsigned int maxCodeLen){
     std::ifstream file(programName,std::ios::binary);
-    unsigned char ve[codeLen];
-    file.read((char*)ve, codeLen);
+    unsigned char ve[maxCodeLen];
+    file.seekg(0,std::ios_base::end);
+    auto len = file.tellg();
+    file.seekg(0,std::ios_base::beg);
+    if(len>maxCodeLen){
+        throw InitializationError(std::string("Too many bytes ")+std::to_string(len));
+    }
+
+    file.read((char*)ve, maxCodeLen);
     file.close();
-    return std::vector(ve,ve+codeLen);
+    return std::vector(ve,ve+maxCodeLen);
 }

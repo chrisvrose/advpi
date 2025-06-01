@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <linux/kvm.h>
+#include <spdlog/spdlog.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
@@ -58,7 +59,7 @@ GBAMemoryMapper::GBAMemoryMapper() {
     if (biosFd <= 0) {
         throw InitializationError("could not open bios rom");
     }
-    std::cout << ("Opened bios\n");
+    spdlog::info("Opened bios");
     void* biosRom =
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
 

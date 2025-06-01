@@ -10,7 +10,7 @@
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <sdl/sdl2.hpp>
-
+#include <spdlog/spdlog.h>
 constexpr bool DEBUG_ENABLE_NISV_TO_USER = false;
 constexpr bool TEST_CREATE_WINDOW = false;
 
@@ -49,14 +49,14 @@ int main(int argc, char**) {
         SDL_Quit();
     }
 
-    std::cout << "Hello, from advpi!"<<std::endl;
+    spdlog::info("Hello - Advpi!");
     std::unique_ptr<GBAMemoryMapper> mem(new GBAMemoryMapper());
     VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
 
     // vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
-    constexpr unsigned char programSize = 4*7;
-    auto programText = readProgram("one.bin",programSize);
-    vm._debugSetWorkRam(programText.data(),programSize);
+    const unsigned int maxProgramSize = ONBOARD_MEM_SIZE;
+    auto programText = readProgram("one.bin",maxProgramSize);
+    vm._debugSetOnBoardRamSegmentBytes(programText.data(),programText.size());
 
 
     if constexpr (DEBUG_ENABLE_NISV_TO_USER) {

@@ -6,6 +6,7 @@ set (CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(spdlog REQUIRED CONFIG)
 
 include_directories(include)
 
@@ -41,4 +42,4 @@ add_custom_target(build_raw_binary ALL
 
 #target_compile_options(test_src_one.bin PUBLIC    -Wall -Xlinker #--oformat=binary)
 
-target_link_libraries(advpi PRIVATE SDL2::SDL2)
+target_link_libraries(advpi PRIVATE SDL2::SDL2 spdlog::spdlog)

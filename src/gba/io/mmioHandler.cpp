@@ -1,11 +1,14 @@
+#include <spdlog/spdlog.h>
+
 #include <gba/io/mmioHandler.hpp>
 #include <iostream>
 
-uint32_t LoggingHandler::read(uint32_t readPosition){
-    std::cout<<"Debug: Reading value\n";
-    return 0;
+uint32_t LoggingHandler::read(uint32_t readPosition) {
+    constexpr uint32_t readValue = 0;
+    spdlog::info("LoggingHandler :: Reading value {} @ {:x}", readValue, readPosition);
+    return readValue;
 }
 
 void LoggingHandler::writeQuadWord(uint32_t readPosition, uint32_t writeValue) {
-    printf("Writing @%u: %x\n",readPosition,writeValue);
+    spdlog::info("LoggingHandler :: Writing value {:x} @ {:x}", writeValue, readPosition);
 }

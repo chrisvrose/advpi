@@ -1,4 +1,5 @@
 
+#include <spdlog/spdlog.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
@@ -47,7 +48,7 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request, void* m
 
     void* initializedMemory = memorySegment;
     auto slot = this->mappingCounter++;
-    std::cout<<"Debug: Preparing with slot "<<slot<<std::endl;
+    spdlog::debug("Preparing slot {}",slot);
 
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
@@ -73,7 +74,7 @@ void GBAKVMMMU::mapToVM(unsigned short slot, MemorySegmentRequest& request,
         throw InitializationError(x);
     }
     this->segmentPositions[slot] = memory_region;
-    std::cout<<"Debug: Mapped "<<memorySegmentName<<" at slot="<<slot<<std::endl;
+    spdlog::debug("Mapped {} @ slot={}",memorySegmentName, slot);
 }
 
 void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
@@ -85,10 +86,9 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
     if(l<length){
         throw InitializationError("Cannot copy as too large");
     }
-    printf("Debug write to slot=%d into %p\n",slot,segment.userspace_addr);
-    // std::cout<<"Debug write to slot="<<slot<<std::endl;
+    spdlog::debug("Write to slot={} @ {:x}: Start",slot, segment.userspace_addr);
     std::memcpy((void*)segment.userspace_addr,code, length);
-    std::cout<<"Debug write to slot="<<slot<<" done!"<<std::endl;
+    spdlog::debug("Write to slot={} @ {:x}: Done!",slot, segment.userspace_addr);
 
 
 
