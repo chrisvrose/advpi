@@ -4,6 +4,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <spdlog/spdlog.h>
 #include <cstring>
 #include <exceptions/initialization_error.hpp>
 #include <iostream>
@@ -75,7 +76,7 @@ void VirtualMachine::assertKvmExtension(int capability,
                                         const char *capabilityName) {
     int capabilityCheckResult = ioctl(kvmFd, KVM_CHECK_EXTENSION, capability);
     if (capabilityCheckResult <= 0) {
-        std::cout << "Not supported: " << capabilityName << std::endl;
+        spdlog::critical("Unsupported capability: {}",capabilityName);
         throw InitializationError(std::string("Capability not supported ") +
                                   capabilityName);
     }
@@ -86,7 +87,7 @@ void VirtualMachine::mapMemory() {
 }
 
 void VirtualMachine::attachMMIOHandlers() {
-    std::cout<<"Debug: Attaching MMIO Handlers"<<std::endl;
+    spdlog::trace("Attaching MMIO Handlers");
     struct MemorySegmentHandler logHandler = {
         .start = 0x4000,
         .length = 0x1000,
@@ -119,10 +120,9 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
 
     while (loopingCpu) {
         std::variant<int, struct kvm_run*> run_state = this->run();
-        std::cout << "Debug: Starting run!" << std::endl;
+        spdlog::info("Starting CPU Emulation");
         if (const int* failedToRun = std::get_if<int>(&run_state)) {
-            std::cout << "Failed to execute: Returned " << *failedToRun
-                      << std::endl;
+            spdlog::critical("Failed to execute: kvm run returned={}",*failedToRun);
             this->_debugPrintRegisters();
             loopingCpu = false;
         } else if (struct kvm_run** run_state_result_ptr =
@@ -138,7 +138,7 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
 
                 /* Handle exit */
                 case KVM_EXIT_HLT:
-                    std::cout << "We're done!" << std::endl;
+                    spdlog::info("Done emulation cycles. Exiting");
                     loopingCpu = false;
                     break;
                 case KVM_EXIT_INTERNAL_ERROR:
@@ -146,7 +146,7 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
                          vcpuKvmRun->internal.suberror);
                     break;
                 case KVM_EXIT_DEBUG:
-                    std::cout << "We hit a breakpoint!\n";
+                    spdlog::warn("Hit debug point");
                     loopingCpu = false;
                     break;
                 case KVM_EXIT_IO:
@@ -154,23 +154,16 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
                     break;
                 case KVM_EXIT_MMIO: {
                     const bool isWrite = vcpuKvmRun->mmio.is_write;
-                    std::cout << "NOTE:Attempted mmio\n";
+                    spdlog::trace("Attempted MMIO");
 
                     this->mmioOperation(vcpuKvmRun->mmio.is_write,vcpuKvmRun->mmio.phys_addr,vcpuKvmRun->mmio.len,vcpuKvmRun->mmio.data);
-                    std::cout << "Attempted write=" << std::hex
-                              << (isWrite ? "yes" : "no")
-                              << " of value="
-                              << show_little_endian_byte(vcpuKvmRun->mmio.data)
-                              << " and at address=0x" << std::hex
-                              << vcpuKvmRun->mmio.phys_addr << std::endl;
-                    // vm._debugPrintRegisters();
+                    spdlog::info("MMIO attempted: write={} location={:x} value={:x}",(isWrite ? "yes" : "no"),vcpuKvmRun->mmio.phys_addr , show_little_endian_byte(vcpuKvmRun->mmio.data));
                     counts--;
 
                     if (counts == 0) loopingCpu = false;
                     break;}
                 default:
-                    printf("Why did we exit?, exit reason %d\n",
-                           vcpuKvmRun->exit_reason);
+                    spdlog::warn("Unmanaged exit with code {}",vcpuKvmRun->exit_reason);
             }
         }
     }
@@ -198,7 +191,7 @@ void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, int len, u
 
 
 VirtualMachine::~VirtualMachine() {
-    std::cout << "Closing the Virtual Machine\n";
+    spdlog::trace("Closing KVM VM");
     close(this->vmFd);
     close(this->kvmFd);
 }

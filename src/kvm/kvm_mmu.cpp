@@ -17,10 +17,10 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request,
                                    const char* memorySegmentName) {
     auto perms = PROT_READ | PROT_EXEC;
     if (!request.readOnly) {
-        printf("Debug: Making %s read/write\n",memorySegmentName);
+        spdlog::debug("Making segment {} read/write",memorySegmentName);
         perms |= PROT_WRITE;
     }else{
-        printf("Debug: Making %s read-only\n",memorySegmentName);
+        spdlog::debug("Making segment {} read-only",memorySegmentName);
     }
 
     void* initializedMemory = mmap(NULL, request.virtualMemoryLength, perms,
@@ -33,18 +33,15 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request,
     }
 
     auto slot = this->mappingCounter++;
-    printf("Debug: Intializing memory at address %p\n",initializedMemory);
+    spdlog::debug("Initialising memory @{:x} for length={:x},userspacelocation={:p}",request.virtualMemoryStart,request.virtualMemoryLength,initializedMemory);
+    // printf("Debug: Intializing memory at address %p\n",initializedMemory);
 
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
 
 void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request, void* memorySegment,
                              const char* memorySegmentName) {
-    if (request.readOnly) {
-        printf("Debug: Making %s is marked read-only\n",memorySegmentName);
-    }else{
-        printf("Debug: Memory %s is marked read/write\n",memorySegmentName);
-    }
+    spdlog::debug("Marking {} as marked read{}",memorySegmentName,request.readOnly?"-only":"/write");
 
     void* initializedMemory = memorySegment;
     auto slot = this->mappingCounter++;
@@ -95,7 +92,7 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
 }
 
 void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
-    printf("Info: Registered MMIO Handler\n");
+    spdlog::info("Registered MMIO Handler @{:x} length={:x}",handler.start,handler.length);
     auto startAddr = handler.start;
     this->mmioHandlers[startAddr] = handler;
 }
@@ -110,27 +107,10 @@ uint32_t GBAKVMMMU::dispatchMMIOReadRequest(uint32_t position){
 std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
     for(auto entry:this->mmioHandlers){
         auto val = entry.second;
-        printf("Trace: %p %p %p\n",val.start,val.length,val.start+val.length);
         if(val.start<=position && (val.start+val.length)>position){
             return std::optional(val);
         }
     }
-    printf("WARN: Found no handler for %p!\n",position);
+    spdlog::warn("Found no MMIO Handler for Request @{:x}",position);
     return std::nullopt;
 }
-// std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
-//     // the page preceeding this address
-//     printf("Debug: Looking for handler at %p\n",position);
-//     auto keyIter = this->mmioHandlers.lower_bound(position);
-//     if(keyIter==this->mmioHandlers.end()){
-//         throw InitializationError( "no handler");
-//         return std::nullopt;
-//     }
-//     else {
-//         // length match
-//         if(keyIter->first+keyIter->second.length > position){
-//            throw InitializationError("handler mismatch"); return std::nullopt;}
-//         return std::optional((keyIter->second));
-//     }
-//     // throw "not yet ready";
-// }
