@@ -86,9 +86,6 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
     spdlog::debug("Write to slot={} @ {:x}: Start",slot, segment.userspace_addr);
     std::memcpy((void*)segment.userspace_addr,code, length);
     spdlog::debug("Write to slot={} @ {:x}: Done!",slot, segment.userspace_addr);
-
-
-
 }
 
 void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
@@ -97,14 +94,14 @@ void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
     this->mmioHandlers[startAddr] = handler;
 }
 
-void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value){
+void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value, uint32_t len){
     this->findMMIOHandler(position)->handler->writeQuadWord(position,value);
 }
 uint32_t GBAKVMMMU::dispatchMMIOReadRequest(uint32_t position){
     return this->findMMIOHandler(position)->handler->read(position);
 }
 
-std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position){
+std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t position, uint32_t len){
     for(auto entry:this->mmioHandlers){
         auto val = entry.second;
         if(val.start<=position && (val.start+val.length)>position){

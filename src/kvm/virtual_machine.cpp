@@ -181,12 +181,12 @@ inline uint32_t getLittleEndianValue(int len, unsigned char* dataElements){
 inline void setLittleEndianValue(int len, unsigned char* dataElements,uint32_t value){
     std::memcpy(dataElements, ((char*)&value)+(sizeof(uint32_t)-len),len);
 }
-void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, int len, unsigned char* dataElements){
+void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, uint32_t len, unsigned char* dataElements){
     if(isWrite){
         uint32_t data = getLittleEndianValue(len,dataElements);
-        this->mmu->dispatchMMIOWriteRequest(phyAddress,data);
+        this->mmu->dispatchMMIOWriteRequest(phyAddress,data, len);
     }
-    auto x = this->mmu->dispatchMMIOReadRequest(phyAddress);
+    auto x = this->mmu->dispatchMMIOReadRequest(phyAddress, len);
     setLittleEndianValue(len,dataElements, x);
 }
 

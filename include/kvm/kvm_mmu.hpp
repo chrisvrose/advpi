@@ -53,6 +53,6 @@ class GBAKVMMMU {
 
     // mmio
     void registerMMIOHandler(struct MemorySegmentHandler);
-    uint32_t dispatchMMIOReadRequest(uint32_t position);
-    void dispatchMMIOWriteRequest(uint32_t position, uint32_t value);
+    uint32_t dispatchMMIOReadRequest(uint32_t position, uint32_t len);
+    void dispatchMMIOWriteRequest(uint32_t position, uint32_t value, uint32_t len);
 };
