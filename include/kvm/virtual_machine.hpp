@@ -25,7 +25,7 @@ class VirtualMachine {
     // mmio sections
     void attachMMIOHandlers();
     std::variant<int, struct kvm_run *> run();
-    void mmioOperation(bool isWrite, uint32_t phyAddress, int len, unsigned char* dataElements);
+    void mmioOperation(bool isWrite, uint32_t phyAddress, uint32_t len, unsigned char* dataElements);
    public:
     void startLoop(std::optional<int> numLoops);
     void _debugSetOnBoardRamSegmentBytes(void* code, size_t codeLen);
