@@ -73,9 +73,9 @@ GBAMemoryMapper::GBAMemoryMapper() {
 
 void GBAMemoryMapper::_debug_memory(void* memory, int size) {
     char* memoryChar = (char*)memory;
-    printf("First 32 bytes: %x,%x,%x,%x\n", memoryChar[0], memoryChar[1],
-           memoryChar[2], memoryChar[3]);
-    printf("Last byte: %x\n", memoryChar[size - 1]);
+    spdlog::info("DebugMemory:: First 32 bytes: {:x},{:x},{:x},{:x}",memoryChar[0], memoryChar[1],
+        memoryChar[2], memoryChar[3]);
+    spdlog::info("DebugMemory:: Last byte: {:x}", memoryChar[size - 1]);
 }
 
 void GBAMemoryMapper::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) {

@@ -63,7 +63,8 @@ void VirtualMachine::assertKvmFunctionalityAndExtensions() {
 
 void VirtualMachine::_debugPrintRegisters() {
     for (int i = 0; i <= 15; i++) {
-        printf("Register(%x)=%lx\n",i,this->cpu->getRegisterValue(i));
+        spdlog::info("Register({:x}={:x}",i,this->cpu->getRegisterValue(i));
+        // printf("Register(%x)=%lx\n",i,this->cpu->getRegisterValue(i));
         // std::cout << "Register(" << i << ")=" << this->cpu->getRegisterValue(i)
         //           << std::endl;
     }
