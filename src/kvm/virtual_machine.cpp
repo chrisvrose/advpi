@@ -10,6 +10,7 @@
 #include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
+#include <thread>
 #include "gba/io/mmioHandler.hpp"
 
 inline uint64_t show_little_endian_byte(const unsigned char data[8]){
@@ -75,7 +76,11 @@ void VirtualMachine::_debugSetOnBoardRamSegmentBytes(void *code, size_t codeLen)
 
 void VirtualMachine::assertKvmExtension(int capability,
                                         const char *capabilityName) {
-    int capabilityCheckResult = ioctl(kvmFd, KVM_CHECK_EXTENSION, capability);
+    this->assertKvmExtensionOnFd(capability, this->kvmFd, capabilityName);
+
+}
+void VirtualMachine::assertKvmExtensionOnFd(int capability, int fd, const char* capabilityName){
+    int capabilityCheckResult = ioctl(fd, KVM_CHECK_EXTENSION, capability);
     if (capabilityCheckResult <= 0) {
         spdlog::critical("Unsupported capability: {}",capabilityName);
         throw InitializationError(std::string("Capability not supported ") +
@@ -168,6 +173,7 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
             }
         }
     }
+    t1.join();
 }
 inline uint32_t getLittleEndianValue(int len, unsigned char* dataElements){
     const int BYTE_LIM = 8;

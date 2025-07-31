@@ -95,10 +95,20 @@ void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
 }
 
 void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value, uint32_t len){
-    this->findMMIOHandler(position)->handler->writeQuadWord(position,value);
+    auto handlerOpt = this->findMMIOHandler(position);
+    if(!handlerOpt.has_value()){
+        spdlog::error("Unhandled write 0x{:x}",position);
+        return;
+    }
+    handlerOpt->handler->writeQuadWord(position,value);
 }
 uint32_t GBAKVMMMU::dispatchMMIOReadRequest(uint32_t position, uint32_t len){
-    return this->findMMIOHandler(position)->handler->read(position);
+    auto handlerOpt = this->findMMIOHandler(position);
+    if(!handlerOpt.has_value()){
+        spdlog::error("Unhandled read 0x{:x}",position);
+        return fallbackLoggerHandler.read(position);
+    }
+    return handlerOpt->handler->read(position);
 }
 
 std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t startPosition){

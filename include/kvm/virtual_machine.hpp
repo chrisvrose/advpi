@@ -19,6 +19,7 @@ class VirtualMachine {
     bool verifyExtension();
     void assertKvmFunctionalityAndExtensions();
     void assertKvmExtension(int capability, const char* capabilityName);
+    void assertKvmExtensionOnFd(int capability, int fd, const char* capabilityName);
     //memory sections
     void mapMemory();
 

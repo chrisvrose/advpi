@@ -40,7 +40,5 @@ add_custom_target(build_raw_binary ALL
     DEPENDS one.bin
 )
 
-#target_compile_options(test_src_one.bin PUBLIC    -Wall -Xlinker #--oformat=binary)
-
 target_link_libraries(advpi PRIVATE SDL2::SDL2 spdlog::spdlog)
 target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)

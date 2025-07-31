@@ -26,6 +26,7 @@ struct MemorySegmentHandler{
 /// TODO: split the mmu into memory and io
 class GBAKVMMMU {
     int vmFd;
+    LoggingHandler fallbackLoggerHandler;
    private:
    // sorted by slot #
     std::map<short,struct kvm_userspace_memory_region> segmentPositions;
