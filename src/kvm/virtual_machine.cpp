@@ -188,7 +188,7 @@ void VirtualMachine::raiseInterrupt(uint32_t line){
         .level=1
     };
     int res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
-
+    usleep(10);
     level.irq = 1<<line;
     level.level = 0;
     res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);

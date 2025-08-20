@@ -1,3 +1,5 @@
+test_src/*.bin
+test_src/*.o
 bios.bin
 build
 .cache
