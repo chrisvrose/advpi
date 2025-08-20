@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(advpi VERSION 0.1.0 LANGUAGES CXX)
+include(CTest)
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -25,3 +26,9 @@ add_executable(advpi
 
 target_link_libraries(advpi PRIVATE SDL2::SDL2 spdlog::spdlog)
 target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
+
+add_executable(endian_test test/endian.cc)
+add_test(
+  NAME endian_test
+  COMMAND $<TARGET_FILE:endian_test>
+  )
