@@ -10,9 +10,16 @@ int test1(){
 int test2(){
     unsigned char bits[] = {0xee,0xbb,0xff,0x00};
     uint32_t val =getLittleEndianValue(4, bits);
-    printf("got value %x\n",val);
+    // printf("got value %x\n",val);
     // std::cout<<"got value"<<val<<std::endl;
     return ASSERT_EQ(val,0xffbbee);
+}
+int test3(){
+    unsigned char bits[] = {0x50,0x00,0x00,0x02};
+    uint32_t val =getLittleEndianValue(4, bits);
+    // printf("got value %x\n",val);
+    // std::cout<<"got value"<<val<<std::endl;
+    return ASSERT_EQ(val,0x2'000'050);
 }
 int main(){
     int (*tests[])() = {test1,test2};

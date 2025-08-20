@@ -55,12 +55,13 @@ const int ONCHIP_MEM_START = 0x03'000'000;
 const int ONCHIP_MEM_SIZE = 0x8'000;
 
 GBAMemoryMapper::GBAMemoryMapper() {
-    int biosFd = open("custom_bios.bin", O_RDONLY);
+    const char biosFileName[] = "custom_bios.bin";
+    int biosFd = open(biosFileName, O_RDONLY);
     // int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {
         throw InitializationError("could not open bios rom");
     }
-    spdlog::info("Opened bios");
+    spdlog::info("Opened bios {}",biosFileName);
     void* biosRom =
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
 

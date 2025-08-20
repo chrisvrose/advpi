@@ -45,5 +45,6 @@ std::vector<unsigned char> readProgram(const char* programName, const unsigned i
 
     file.read((char*)ve, maxCodeLen);
     file.close();
+
     return std::vector(ve,ve+maxCodeLen);
 }
