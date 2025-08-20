@@ -3,19 +3,16 @@
 #include <linux/kvm.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-
-#include <spdlog/spdlog.h>
-#include <cstring>
-#include <exceptions/initialization_error.hpp>
 #include <iostream>
-#include <kvm/virtual_machine.hpp>
 #include <memory>
 #include <thread>
-#include "gba/io/mmioHandler.hpp"
 
-inline uint64_t show_little_endian_byte(const unsigned char data[8]){
-    return *(uint64_t*)((void*)data);
-}
+#include <spdlog/spdlog.h>
+#include <kvm/virtual_machine.hpp>
+#include <exceptions/initialization_error.hpp>
+#include <gba/io/mmioHandler.hpp>
+#include <util/byte.hpp>
+
 
 VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemoryMapper> memory,
                                uint64_t initialPcRegister) {
@@ -121,9 +118,14 @@ void VirtualMachine::enableCapability(uint32_t capability) {
 }
 
 void VirtualMachine::startLoop(std::optional<int> numLoops){
-    int counts = 2;
+    int counts = -1;
     bool loopingCpu = true;
-
+    std::thread exampleTimerThread([&]() {
+        int count = 0;
+        while((count++)!=4){
+        sleep(4);
+        this->raiseInterrupt(0);}
+    });
     while (loopingCpu) {
         std::variant<int, struct kvm_run*> run_state = this->run();
         spdlog::info("Starting CPU Emulation");
@@ -173,20 +175,26 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
             }
         }
     }
-    t1.join();
+    exampleTimerThread.join();
 }
-inline uint32_t getLittleEndianValue(int len, unsigned char* dataElements){
-    const int BYTE_LIM = 8;
-    uint32_t sum=0;
-    for (int i=0;i<BYTE_LIM&&i<len;i++){
-        sum<<=8;
-        sum|=dataElements[i];
+
+void VirtualMachine::raiseInterrupt(uint32_t line){
+    if(line>=16){
+        throw InitializationError("Invalid interrupt line");
     }
-    return sum;
+    spdlog::warn("Raising interrupt on line {}, id {}",line, 1<<line);
+    struct kvm_irq_level level = {
+        .irq = static_cast<__u32>((1<<line)),
+        .level=1
+    };
+    int res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
+
+    level.irq = 1<<line;
+    level.level = 0;
+    res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
+    spdlog::debug("OUT INTERRUPT thread, status={}",res);
 }
-inline void setLittleEndianValue(int len, unsigned char* dataElements,uint32_t value){
-    std::memcpy(dataElements, ((char*)&value)+(sizeof(uint32_t)-len),len);
-}
+
 void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, uint32_t len, unsigned char* dataElements){
     if(isWrite){
         uint32_t data = getLittleEndianValue(len,dataElements);

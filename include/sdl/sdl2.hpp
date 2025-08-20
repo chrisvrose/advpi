@@ -6,8 +6,8 @@
 void assertSdl2Initialization();
 
 class SDLWindow{
-    SDL_Window* window = NULL;
-    SDL_Surface* screenSurface = NULL;
+    SDL_Window* window = nullptr;
+    SDL_Surface* screenSurface = nullptr;
     uint32_t windowWidth;
     uint32_t windowHeight;
     std::string title;

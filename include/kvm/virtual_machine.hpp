@@ -33,7 +33,10 @@ class VirtualMachine {
     void _debugPrintRegisters();
     VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
 
-
+    /**
+     * Raise an edge-triggered interrupt.
+     */
+    void raiseInterrupt(uint32_t line);
     void enableCapability(uint32_t capabilty);
     void enableCPUCapability(uint32_t capabilty);
     ~VirtualMachine();
