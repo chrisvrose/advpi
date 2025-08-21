@@ -29,14 +29,14 @@ WFI
 sub r15,r15,#8
 
 INTHANDLE:
-mov r7,#0x4000
+mov r7,#0x1
 mov r8,#0x1004
 str r7,[r8]
 WFI
 sub r15,r15,#8
 
 FIQHANDLE:
-mov r7,#0x3000
+mov r7,#0x2
 mov r8,#0x1004
 str r7,[r8]
 WFI
