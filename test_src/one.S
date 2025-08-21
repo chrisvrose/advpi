@@ -14,6 +14,8 @@ mov r2, #0x18
 add r0,r0, #0x0004
 ldr r3,[r2]
 str r3,[r0]
+ldr r4,[r3]
+str r4,[r0]
 
 WFI
 sub r15,r15,#32

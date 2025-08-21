@@ -188,7 +188,7 @@ void VirtualMachine::raiseInterrupt(uint32_t line){
         .level=1
     };
     int res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
-    usleep(10);
+    usleep(100);
     level.irq = 1<<line;
     level.level = 0;
     res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
@@ -199,9 +199,10 @@ void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress, uint32_t l
     if(isWrite){
         uint32_t data = getLittleEndianValue(len,dataElements);
         this->mmu->dispatchMMIOWriteRequest(phyAddress,data, len);
+    }else{
+        auto x = this->mmu->dispatchMMIOReadRequest(phyAddress, len);
+        setLittleEndianValue(len,dataElements, x);
     }
-    auto x = this->mmu->dispatchMMIOReadRequest(phyAddress, len);
-    setLittleEndianValue(len,dataElements, x);
 }
 
 

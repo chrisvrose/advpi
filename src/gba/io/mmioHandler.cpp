@@ -10,5 +10,5 @@ uint32_t LoggingHandler::read(uint32_t readPosition) {
 }
 
 void LoggingHandler::writeQuadWord(uint32_t readPosition, uint32_t writeValue) {
-    spdlog::info("LoggingHandler :: Writing value {:x} @ {:x}", writeValue, readPosition);
+    spdlog::info("LoggingHandler :: Writing value 0x{:x} @ {:x}", writeValue, readPosition);
 }
