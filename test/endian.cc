@@ -1,33 +1,37 @@
 #include <iostream>
 #include <util/byte.hpp>
-#define ASSERT_EQ(x,t) (!((x)==(t)))
-int test1(){
-    const unsigned char bits[4] = {0xee,0xbb,0xff,0x00};
+#define RETURN_ASSERT_EQ(x, t) (!((x) == (t)))
+int testConvertToLittleEndian1() {
+    const unsigned char bits[4] = {0xee, 0xbb, 0xff, 0x00};
     auto val = show_little_endian_byte(bits);
 
-    return ASSERT_EQ(val,0xffbbee);
+    return RETURN_ASSERT_EQ(val, 0xffbbee);
 }
-int test2(){
-    unsigned char bits[] = {0xee,0xbb,0xff,0x00};
-    uint32_t val =getLittleEndianValue(4, bits);
+int testConvertToLittleEndian2() {
+    unsigned char bits[] = {0xee, 0xbb, 0xff, 0x00};
+    uint32_t val = getLittleEndianValue(4, bits);
     // printf("got value %x\n",val);
     // std::cout<<"got value"<<val<<std::endl;
-    return ASSERT_EQ(val,0xffbbee);
+    return RETURN_ASSERT_EQ(val, 0xffbbee);
 }
-int test3(){
-    unsigned char bits[] = {0x50,0x00,0x00,0x02};
-    uint32_t val =getLittleEndianValue(4, bits);
+int testConvertToLittleEndian3() {
+    unsigned char bits[] = {0x50, 0x00, 0x00, 0x02};
+    uint32_t val = getLittleEndianValue(4, bits);
     // printf("got value %x\n",val);
     // std::cout<<"got value"<<val<<std::endl;
-    return ASSERT_EQ(val,0x2'000'050);
+    return RETURN_ASSERT_EQ(val, 0x2'000'050);
 }
-int main(){
-    int (*tests[])() = {test1,test2};
-    int i=1;
-    for(auto test:tests){
+
+int testConvertFromLittleEndian4(){
+    return 0;
+}
+int main() {
+    int (*tests[])() = {testConvertToLittleEndian1, testConvertToLittleEndian2, testConvertToLittleEndian3};
+    int i = 1;
+    for (auto test : tests) {
         auto retVal = test();
-        if(retVal){
-            std::cout<<"Test "<<i<<" failed!"<<std::endl;
+        if (retVal) {
+            std::cout << "Test " << i << " failed!" << std::endl;
             return retVal;
         }
         i++;

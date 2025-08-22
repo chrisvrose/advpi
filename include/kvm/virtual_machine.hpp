@@ -36,7 +36,7 @@ class VirtualMachine {
     /**
      * Raise an edge-triggered interrupt.
      */
-    void raiseInterrupt(uint32_t line);
+    void setInterruptLine(bool enable, uint32_t line=0);
     void enableCapability(uint32_t capabilty);
     void enableCPUCapability(uint32_t capabilty);
     ~VirtualMachine();

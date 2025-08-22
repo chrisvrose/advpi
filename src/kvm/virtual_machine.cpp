@@ -123,8 +123,11 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
     std::thread exampleTimerThread([&]() {
         int count = 0;
         while((count++)!=4){
-        sleep(4);
-        this->raiseInterrupt(0);}
+            sleep(4);
+            this->setInterruptLine(true);
+            usleep(100);
+            this->setInterruptLine(false);
+        }
     });
     while (loopingCpu) {
         std::variant<int, struct kvm_run*> run_state = this->run();
@@ -169,7 +172,8 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
                     counts--;
 
                     if (counts == 0) loopingCpu = false;
-                    break;}
+                    break;
+                }
                 default:
                     spdlog::warn("Unmanaged exit with code {}",vcpuKvmRun->exit_reason);
             }
@@ -178,20 +182,16 @@ void VirtualMachine::startLoop(std::optional<int> numLoops){
     exampleTimerThread.join();
 }
 
-void VirtualMachine::raiseInterrupt(uint32_t line){
+void VirtualMachine::setInterruptLine(bool enable,uint32_t line){
     if(line>=16){
         throw InitializationError("Invalid interrupt line");
     }
-    spdlog::warn("Raising interrupt on line {}, id {}",line, 1<<line);
+    spdlog::info("Raising interrupt on line {}, id {}",line, line);
     struct kvm_irq_level level = {
-        .irq = static_cast<__u32>((1<<line)),
-        .level=1
+        .irq = static_cast<__u32>((line)),
+        .level=enable&0x1
     };
     int res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
-    usleep(100);
-    level.irq = 1<<line;
-    level.level = 0;
-    res = ioctl(this->vmFd,KVM_IRQ_LINE,&level);
     spdlog::debug("OUT INTERRUPT thread, status={}",res);
 }
 
