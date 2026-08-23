@@ -4,7 +4,7 @@
 #include <linux/kvm.h>
 #include <unistd.h>
 // #include <SDL2/SDL.h>
-#include <arm_code.hpp>
+#include <util/bios_loader.hpp>
 #include <cstddef>
 #include <gba_memory.hpp>
 #include <iostream>

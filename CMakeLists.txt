@@ -33,7 +33,6 @@ include_directories(include)
 
 add_executable(advpi
     src/main.cpp
-    src/arm_code.cpp
     src/gba_memory.cpp
     src/kvm/virtual_machine.cpp
     src/kvm/vcpu.cpp
@@ -41,10 +40,11 @@ add_executable(advpi
     src/sdl/sdl2.cpp
     src/kvm/kvm_mmu.cpp
     src/gba/io/mmioHandler.cpp
+    src/util/bios_loader.cpp
 )
 
 target_link_libraries(advpi PRIVATE
-SDL3::SDL3-shared
+# SDL3::SDL3
 spdlog::spdlog)
 # target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
 
