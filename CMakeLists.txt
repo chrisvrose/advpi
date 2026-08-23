@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.14)
 project(advpi VERSION 0.1.0 LANGUAGES CXX)
 include(CTest)
 
@@ -6,8 +6,15 @@ set (CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(spdlog REQUIRED CONFIG)
+option(ADVPI_VENDORED "Use vendored libraries" ON)
+
+if(ADVPI_VENDORED)
+  add_subdirectory(libs/spdlog EXCLUDE_FROM_ALL)
+  # add_subdirectory(libs/sdl2 EXCLUDE_FROM_ALL)
+else()
+  find_package(spdlog REQUIRED CONFIG REQUIRED)
+  # find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+endif()
 
 include_directories(include)
 
@@ -24,8 +31,10 @@ add_executable(advpi
     src/gba/io/mmioHandler.cpp
 )
 
-target_link_libraries(advpi PRIVATE SDL2::SDL2 spdlog::spdlog)
-target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
+target_link_libraries(advpi PRIVATE
+# SDL3::SDL3
+spdlog::spdlog)
+# target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
 
 add_executable(endian_test test/endian.cc)
 add_test(

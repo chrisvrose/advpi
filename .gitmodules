@@ -1,0 +1,7 @@
+[submodule "libs/spdlog"]
+	path = libs/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "libs/sdl2"]
+	path = libs/sdl2
+	url = https://github.com/libsdl-org/SDL.git
+	branch = release-3.4.x

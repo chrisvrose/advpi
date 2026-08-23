@@ -1,0 +1,2 @@
+.byte 0x11
+mov r0, #0x5a5a
