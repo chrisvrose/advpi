@@ -17,3 +17,4 @@ _deps
 CMakeUserPresets.json
 
 !test_src/Makefile
+stublib/stubs/*.so

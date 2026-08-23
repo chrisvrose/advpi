@@ -8,8 +8,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(ADVPI_VENDORED "Use vendored libraries" ON)
 
+# Cross-compilation stub libraries
+if(CMAKE_CROSSCOMPILING)
+  set(STUBLIB_DIR "${CMAKE_SOURCE_DIR}/stublib/stubs")
+  link_directories(${STUBLIB_DIR})
+  message(STATUS "Using stub libraries from: ${STUBLIB_DIR}")
+endif()
+
 if(ADVPI_VENDORED)
   add_subdirectory(libs/spdlog EXCLUDE_FROM_ALL)
+
+  # Disable SDL3 optional dependencies not needed for cross-compilation
+  # set(SDL_JACK OFF CACHE BOOL "" FORCE)
+  # set(SDL_SNDIO OFF CACHE BOOL "" FORCE)
+
   # add_subdirectory(libs/sdl2 EXCLUDE_FROM_ALL)
 else()
   find_package(spdlog REQUIRED CONFIG REQUIRED)
@@ -32,7 +44,7 @@ add_executable(advpi
 )
 
 target_link_libraries(advpi PRIVATE
-# SDL3::SDL3
+SDL3::SDL3-shared
 spdlog::spdlog)
 # target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
 

@@ -38,7 +38,9 @@ If you are compiling on an aarch64 system, you would definitely not want to vend
 
 ### Build bios roms
 
-The bios roms are manually built separately.
+The bios roms are manually built separately. It requires an arm (32-bit) toolchain present on your system. 
+
+Run `make` in the folder to generate the test binaries required.
 
 ## Considerations and assumptions for verification
 
