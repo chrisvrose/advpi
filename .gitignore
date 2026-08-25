@@ -1,5 +1,5 @@
-test_src/*.bin
-test_src/*.o
+bios/*.bin
+bios/*.o
 bios.bin
 build
 .cache
@@ -16,5 +16,5 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
-!test_src/Makefile
+!bios/Makefile
 stublib/stubs/*.so
