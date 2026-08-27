@@ -1,17 +1,19 @@
 #pragma once
-#include <cstddef>
-#include <cstdint>
 #include <exceptions/initialization_error.hpp>
-#include<memory>
-#include<kvm/mmu.hpp>
+#include <kvm/mmu.hpp>
+#include <memory>
+
+#include "util/app_config.hh"
 class GBAMemoryMapper {
    private:
     void* bios;
     int biosFd;
+    std::shared_ptr<AppConfigProvider> configProvider;
 
     void _debug_memory(void* memory, int size);
+
    public:
-    GBAMemoryMapper();
+    GBAMemoryMapper(std::shared_ptr<AppConfigProvider> configProvider);
     void mapToVM(std::shared_ptr<MemoryManager> mmu);
     ~GBAMemoryMapper();
 };

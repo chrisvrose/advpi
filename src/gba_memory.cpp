@@ -54,9 +54,13 @@ const int ONBOARD_MEM_SIZE = 0x40'000;
 const int ONCHIP_MEM_START = 0x03'000'000;
 const int ONCHIP_MEM_SIZE = 0x8'000;
 
-GBAMemoryMapper::GBAMemoryMapper() {
-    const char biosFileName[] = "custom_bios.bin";
-    int biosFd = open(biosFileName, O_RDONLY);
+GBAMemoryMapper::GBAMemoryMapper(std::shared_ptr<AppConfigProvider> configProvider) {
+    this->configProvider = std::move(configProvider);
+
+    std::string biosFileName = this->configProvider->biosFileLocation();
+
+    spdlog::debug("Attempting to open bios filename {}",biosFileName);
+    int biosFd = open(biosFileName.c_str(), O_RDONLY);
     // int biosFd = open("bios.bin", O_RDONLY);
     if (biosFd <= 0) {
         throw InitializationError("could not open bios rom");

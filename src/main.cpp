@@ -4,10 +4,13 @@
 #include <linux/kvm.h>
 #include <unistd.h>
 // #include <SDL2/SDL.h>
-#include <util/bios_loader.hpp>
 #include <gba_memory.hpp>
-#include <kvm/virtual_machine.hpp>
 #include <kvm/mmio.hpp>
+#include <kvm/virtual_machine.hpp>
+#include <memory>
+#include <util/bios_loader.hpp>
+
+#include "util/app_config.hh"
 // #include <sdl/sdl2.hpp>
 #include <spdlog/spdlog.h>
 constexpr bool TEST_CREATE_WINDOW = false;
@@ -35,8 +38,8 @@ int main(int argc, char**) {
     //     }
     //     screenSurface = SDL_GetWindowSurface(window);
     //     SDL_SetWindowTitle(window, WINDOW_TITLE);
-    //     SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-    //     SDL_UpdateWindowSurface(window);
+    //     SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format,
+    //     0xFF, 0xFF, 0xFF)); SDL_UpdateWindowSurface(window);
     //     SDL_ShowWindow(window);
     //     SDL_Delay(10'000);
     //     SDL_DestroyWindow(window);
@@ -44,13 +47,15 @@ int main(int argc, char**) {
     // }
 
     spdlog::info("Hello - Advpi!");
-    std::unique_ptr<GBAMemoryMapper> mem(new GBAMemoryMapper());
-    std::shared_ptr<MMIOBusHandler> mmioBusHandler;
-    VirtualMachine vm(std::move(mem), std::move(mmioBusHandler), ONBOARD_MEM_START);
 
-    const unsigned int maxProgramSize = ONBOARD_MEM_SIZE;
-    auto programText = readProgram("one.bin",maxProgramSize);
-    vm._debugSetOnBoardRamSegmentBytes(programText.data(),programText.size());
+    std::shared_ptr<EnvironmentVariableAppConfigProvider> configProvider =
+        std::make_shared<EnvironmentVariableAppConfigProvider>();
+
+    std::unique_ptr<GBAMemoryMapper> mem =
+        std::make_unique<GBAMemoryMapper>(configProvider);
+    std::shared_ptr<MMIOBusHandler> mmioBusHandler;
+    VirtualMachine vm(std::move(mem), std::move(mmioBusHandler),
+                      ONBOARD_MEM_START);
 
     vm.startLoop(5);
 

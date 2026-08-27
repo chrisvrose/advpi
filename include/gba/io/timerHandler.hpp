@@ -1,11 +1,13 @@
+#pragma once
 #include <cstdint>
+
 #include "gba/io/mmioHandler.hpp"
 
-class TimerIOHandler: public MMIOHandler{
-    private:
+class TimerIOHandler : public MMIOHandler {
+   private:
     int timerAmount[4] = {0};
 
-    public:
+   public:
     // LoggingHandler(){}
     using MMIOHandler::MMIOHandler;
     uint32_t read(uint32_t address, uint8_t len) override;

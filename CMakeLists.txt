@@ -41,6 +41,7 @@ add_executable(advpi
     src/kvm/mmu.cpp
     src/kvm/mmio.cpp
     src/util/bios_loader.cpp
+    src/util/app_config.cc
 )
 
 target_link_libraries(advpi PRIVATE
