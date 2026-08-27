@@ -190,7 +190,7 @@ void VirtualMachine::setInterruptLine(bool enable, uint32_t line) {
     }
     spdlog::info("Raising interrupt on line {}, id {}", line, line);
     struct kvm_irq_level level = {.irq = static_cast<__u32>(line),
-                                  .level = enable & 0x1};
+                                  .level = enable & 0x1u};
     int res = ioctl(this->vmFd, KVM_IRQ_LINE, &level);
     spdlog::debug("OUT INTERRUPT thread, status={}", res);
 }
