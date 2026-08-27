@@ -1,0 +1,86 @@
+
+#include "kvm/mmio.hpp"
+
+#include <iostream>
+#include <memory>
+#include <ostream>
+
+#include "gba/io/mmioHandler.hpp"
+#include "spdlog/spdlog.h"
+#include "util/runner.hh"
+
+class WrongMMIOHandler : public MMIOHandler {
+    uint32_t read(uint32_t readValue) { throw "Unexpected read"; }
+    void writeQuadWord(uint32_t readValue, uint32_t writeValue) {
+        throw "Unexpected write";
+    }
+};
+
+bool testRegisterCanFindFunction() {
+    class MockMMIOHandler : public MMIOHandler {
+        uint32_t read(uint32_t readValue) {
+            if (readValue != 0) throw "Unexpected call address";
+            return -25;
+        }
+        void writeQuadWord(uint32_t readValue, uint32_t writeValue) {
+            throw "Woops! Why was this called";
+        }
+    };
+    MemorySegmentHandler map1{.start = 0x0,
+                        .length = 0x1000,
+                        .handler = std::make_shared<MockMMIOHandler>()};
+    MemorySegmentHandler map2{.start = 0x2000,
+                        .length = 0x1000,
+                        .handler = std::make_shared<WrongMMIOHandler>()};
+    MMIOBusHandler busHandler;
+    busHandler.registerMem({map1});
+
+    auto found = busHandler.findMMIOHandlerForAlignedAddress(0);
+
+    return found->get()->read(0x0) == -25;
+}
+
+
+bool testRegisterReturnsHandlerThatIsWithinRange() {
+    MemorySegmentHandler map1{.start = 0x1000,
+                        .length = 0x1000,
+                        .handler = std::make_shared<WrongMMIOHandler>()};
+    MMIOBusHandler busHandler;
+    busHandler.registerMem({map1});
+
+    auto found = busHandler.findMMIOHandlerForAlignedAddress(0x1002);
+    return found.has_value();
+}
+
+bool testRegisterReturnsEmptyWhenOutOfRange() {
+    MemorySegmentHandler map1{.start = 0x0,
+                        .length = 0x1000,
+                        .handler = std::make_shared<WrongMMIOHandler>()};
+
+    MemorySegmentHandler map2{.start = 0x3000,
+                        .length = 0x1000,
+                        .handler = std::make_shared<WrongMMIOHandler>()};
+    MMIOBusHandler busHandler;
+    busHandler.registerMem({map1,map2});
+
+    auto found = busHandler.findMMIOHandlerForAlignedAddress(0x1001);
+    return found.has_value()==false;
+}
+
+
+bool testRegisterReturnsEmpty() {
+    MemorySegmentHandler map1{.start = 0x0,
+                        .length = 0x1000,
+                        .handler = std::make_shared<WrongMMIOHandler>()};
+    MMIOBusHandler busHandler;
+    busHandler.registerMem({map1});
+
+    auto found = busHandler.findMMIOHandlerForAlignedAddress(0x3000);
+    return found.has_value()==false;
+}
+
+
+int main() {
+    spdlog::info("Started tests");
+    return runTests({testRegisterCanFindFunction,testRegisterReturnsHandlerThatIsWithinRange,testRegisterReturnsEmptyWhenOutOfRange,testRegisterReturnsEmpty}) == 0;
+}

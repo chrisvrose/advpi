@@ -5,7 +5,8 @@
 #include <memory>
 #include <memory>
 #include <linux/kvm.h>
-#include<kvm/kvm_mmu.hpp>
+#include<kvm/mmu.hpp>
+#include <kvm/mmio.hpp>
 
 
 class VirtualMachine {
@@ -15,7 +16,8 @@ class VirtualMachine {
     std::unique_ptr<GBAMemoryMapper> memory;
     uint64_t initialPcRegister;
     std::shared_ptr<VCPU> cpu;
-    std::shared_ptr<GBAKVMMMU> mmu;
+    std::shared_ptr<MemoryManager> mmu;
+    std::shared_ptr<MMIOBusHandler> mmio;
     bool verifyExtension();
     void assertKvmFunctionalityAndExtensions();
     void assertKvmExtension(int capability, const char* capabilityName);
@@ -28,10 +30,10 @@ class VirtualMachine {
     std::variant<int, struct kvm_run *> run();
     void mmioOperation(bool isWrite, uint32_t phyAddress, uint32_t len, unsigned char* dataElements);
    public:
-    void startLoop(std::optional<int> numLoops);
+    void startLoop(std::optional<int> numLoops = std::nullopt);
     void _debugSetOnBoardRamSegmentBytes(void* code, size_t codeLen);
     void _debugPrintRegisters();
-    VirtualMachine(std::unique_ptr<GBAMemoryMapper>,uint64_t);
+    VirtualMachine(std::unique_ptr<GBAMemoryMapper>,std::shared_ptr<MMIOBusHandler> mmioBusHandler,uint64_t);
 
     /**
      * Raise an edge-triggered interrupt.

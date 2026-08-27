@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <exceptions/initialization_error.hpp>
 #include<memory>
-#include<kvm/kvm_mmu.hpp>
+#include<kvm/mmu.hpp>
 class GBAMemoryMapper {
    private:
     void* bios;
@@ -12,7 +12,7 @@ class GBAMemoryMapper {
     void _debug_memory(void* memory, int size);
    public:
     GBAMemoryMapper();
-    void mapToVM(std::shared_ptr<GBAKVMMMU> mmu);
+    void mapToVM(std::shared_ptr<MemoryManager> mmu);
     ~GBAMemoryMapper();
 };
 

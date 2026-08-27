@@ -5,22 +5,16 @@
 #include <unistd.h>
 // #include <SDL2/SDL.h>
 #include <util/bios_loader.hpp>
-#include <cstddef>
 #include <gba_memory.hpp>
-#include <iostream>
 #include <kvm/virtual_machine.hpp>
+#include <kvm/mmio.hpp>
 // #include <sdl/sdl2.hpp>
 #include <spdlog/spdlog.h>
-constexpr bool DEBUG_ENABLE_NISV_TO_USER = false;
 constexpr bool TEST_CREATE_WINDOW = false;
 
 constexpr uint32_t WINDOW_WIDTH = 300;
 constexpr uint32_t WINDOW_HEIGHT = 200;
 constexpr char WINDOW_TITLE[] = "AdvancedPi Emulator";
-
-
-
-
 
 int main(int argc, char**) {
     // if(TEST_CREATE_WINDOW){
@@ -51,19 +45,14 @@ int main(int argc, char**) {
 
     spdlog::info("Hello - Advpi!");
     std::unique_ptr<GBAMemoryMapper> mem(new GBAMemoryMapper());
-    VirtualMachine vm(std::move(mem), ONBOARD_MEM_START);
+    std::shared_ptr<MMIOBusHandler> mmioBusHandler;
+    VirtualMachine vm(std::move(mem), std::move(mmioBusHandler), ONBOARD_MEM_START);
 
-    // vm._debugSetWorkRam((void*)CODE, CODE_LENGTH);
     const unsigned int maxProgramSize = ONBOARD_MEM_SIZE;
     auto programText = readProgram("one.bin",maxProgramSize);
     vm._debugSetOnBoardRamSegmentBytes(programText.data(),programText.size());
 
-
-    if constexpr (DEBUG_ENABLE_NISV_TO_USER) {
-        vm.enableCapability(KVM_CAP_ARM_NISV_TO_USER);
-    }
-
-    vm.startLoop(std::nullopt);
+    vm.startLoop(5);
 
     return 0;
 }

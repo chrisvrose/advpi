@@ -3,17 +3,15 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <exceptions/initialization_error.hpp>
-#include <kvm/kvm_mmu.hpp>
+#include <kvm/mmu.hpp>
 #include <string>
-#include<iostream>
 
-GBAKVMMMU::GBAKVMMMU(int vmFd) { this->vmFd = vmFd; }
+MemoryManager::MemoryManager(int vmFd) { this->vmFd = vmFd; }
 
-void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request,
+void MemoryManager::registerMemoryPage(struct MemorySegmentRequest& request,
                                    const char* memorySegmentName) {
     auto perms = PROT_READ | PROT_EXEC;
     if (!request.readOnly) {
@@ -39,7 +37,7 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request,
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
 
-void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request, void* memorySegment,
+void MemoryManager::registerMemoryPage(struct MemorySegmentRequest& request, void* memorySegment,
                              const char* memorySegmentName) {
     spdlog::debug("Marking {} as marked read{}",memorySegmentName,request.readOnly?"-only":"/write");
 
@@ -50,7 +48,7 @@ void GBAKVMMMU::registerMemoryPage(struct MemorySegmentRequest& request, void* m
     mapToVM(slot, request, initializedMemory, memorySegmentName);
 }
 
-void GBAKVMMMU::mapToVM(unsigned short slot, MemorySegmentRequest& request,
+void MemoryManager::mapToVM(unsigned short slot, MemorySegmentRequest& request,
                         void* initializedMemory, const char* memorySegmentName) {
 
     if(this->segmentPositions.count(slot)>0){
@@ -67,14 +65,14 @@ void GBAKVMMMU::mapToVM(unsigned short slot, MemorySegmentRequest& request,
         ioctl(this->vmFd, KVM_SET_USER_MEMORY_REGION, &memory_region);
     if (memorySetRequest != 0) {
         char x[256] = {0};
-        snprintf(x, 254, "Failed to set memory segment at %p for slot %d, named %.64s",request.virtualMemoryStart,slot, memorySegmentName);
+        snprintf(x, 254, "Failed to set memory segment at %x for slot %d, named %.64s",request.virtualMemoryStart,slot, memorySegmentName);
         throw InitializationError(x);
     }
     this->segmentPositions[slot] = memory_region;
     spdlog::debug("Mapped {} @ slot={}",memorySegmentName, slot);
 }
 
-void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
+void MemoryManager::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
     if(this->segmentPositions.count(slot)!=1){
         throw InitializationError("DebugError: Expected slot for writing to");
     }
@@ -86,38 +84,4 @@ void GBAKVMMMU::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
     spdlog::debug("Write to slot={} @ {:x}: Start",slot, segment.userspace_addr);
     std::memcpy((void*)segment.userspace_addr,code, length);
     spdlog::debug("Write to slot={} @ {:x}: Done!",slot, segment.userspace_addr);
-}
-
-void GBAKVMMMU::registerMMIOHandler(struct MemorySegmentHandler handler){
-    spdlog::info("Registered MMIO Handler @{:x} length={:x}",handler.start,handler.length);
-    auto startAddr = handler.start;
-    this->mmioHandlers[startAddr] = handler;
-}
-
-void GBAKVMMMU::dispatchMMIOWriteRequest(uint32_t position, uint32_t value, uint32_t len){
-    auto handlerOpt = this->findMMIOHandler(position);
-    if(!handlerOpt.has_value()){
-        spdlog::error("Unhandled write 0x{:x}",position);
-        return;
-    }
-    handlerOpt->handler->writeQuadWord(position,value);
-}
-uint32_t GBAKVMMMU::dispatchMMIOReadRequest(uint32_t position, uint32_t len){
-    auto handlerOpt = this->findMMIOHandler(position);
-    if(!handlerOpt.has_value()){
-        spdlog::error("Unhandled read 0x{:x}",position);
-        return fallbackLoggerHandler.read(position);
-    }
-    return handlerOpt->handler->read(position);
-}
-
-std::optional<MemorySegmentHandler> GBAKVMMMU::findMMIOHandler(uint32_t startPosition){
-    for(auto entry:this->mmioHandlers){
-        auto val = entry.second;
-        if(val.start<=startPosition && (val.start+val.length)>startPosition){
-            return std::optional(val);
-        }
-    }
-    spdlog::warn("Found no MMIO Handler for Request @{:x}",startPosition);
-    return std::nullopt;
 }

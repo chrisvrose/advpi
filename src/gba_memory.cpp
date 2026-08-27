@@ -9,7 +9,7 @@
 #include <cstring>
 #include <gba_memory.hpp>
 #include <iostream>
-#include "kvm/kvm_mmu.hpp"
+#include "kvm/mmu.hpp"
 /*
 Memory map
 
@@ -80,7 +80,7 @@ void GBAMemoryMapper::_debug_memory(void* memory, int size) {
     spdlog::info("DebugMemory:: Last byte: {:x}", memoryChar[size - 1]);
 }
 
-void GBAMemoryMapper::mapToVM(std::shared_ptr<GBAKVMMMU> mmu) {
+void GBAMemoryMapper::mapToVM(std::shared_ptr<MemoryManager> mmu) {
     struct MemorySegmentRequest onboardMemoryAllocationRequest = {
         .readOnly = false,
         .virtualMemoryStart=ONBOARD_MEM_START,

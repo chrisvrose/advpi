@@ -38,18 +38,36 @@ add_executable(advpi
     src/kvm/vcpu.cpp
     src/gba/cart.cpp
     src/sdl/sdl2.cpp
-    src/kvm/kvm_mmu.cpp
+    src/kvm/mmu.cpp
+    src/kvm/mmio.cpp
     src/gba/io/mmioHandler.cpp
     src/util/bios_loader.cpp
 )
 
 target_link_libraries(advpi PRIVATE
 # SDL3::SDL3
-spdlog::spdlog)
+spdlog::spdlog
+)
 # target_compile_definitions(advpi PUBLIC SPDLOG_COMPILED_LIB)
 
-add_executable(endian_test test/endian.cc)
+
+
+add_executable(endian_test test/endian.cc test/util/runner.cc)
+add_executable(mmio_test test/kvm/mmio.cc test/util/runner.cc src/kvm/mmio.cpp)
+
+
+
+target_include_directories(endian_test PRIVATE test/include)
+target_include_directories(mmio_test PRIVATE test/include)
+
+
+
 add_test(
   NAME endian_test
   COMMAND $<TARGET_FILE:endian_test>
-  )
+)
+add_test(
+  NAME mmio_test
+  COMMAND $<TARGET_FILE:mmio_test>
+)
+target_link_libraries(mmio_test PRIVATE spdlog::spdlog)

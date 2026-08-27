@@ -7,14 +7,15 @@
 
 #include <exceptions/initialization_error.hpp>
 #include <gba/io/mmioHandler.hpp>
-#include <iostream>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
 #include <thread>
 #include <util/byte.hpp>
 
 VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemoryMapper> memory,
+                               std::shared_ptr<MMIOBusHandler> mmioBusHandler,
                                uint64_t initialPcRegister) {
+    this->mmio = std::move(mmioBusHandler);
     this->memory = std::move(memory);
     this->initialPcRegister = initialPcRegister;
     {
@@ -35,7 +36,7 @@ VirtualMachine::VirtualMachine(std::unique_ptr<GBAMemoryMapper> memory,
         }
         this->vmFd = vmfd;
     }
-    this->mmu = std::make_shared<GBAKVMMMU>(this->vmFd);
+    this->mmu = std::make_shared<MemoryManager>(this->vmFd);
     this->mapMemory();
 
     this->cpu = std::make_shared<VCPU>(this->kvmFd, this->vmFd);
@@ -92,7 +93,7 @@ void VirtualMachine::attachMMIOHandlers() {
         .start = 0x4000,
         .length = 0x1000,
         .handler = std::make_shared<LoggingHandler>()};
-    this->mmu->registerMMIOHandler(logHandler);
+    this->mmio->registerMem({logHandler});
 }
 
 std::variant<int, struct kvm_run*> VirtualMachine::run() {
@@ -188,7 +189,7 @@ void VirtualMachine::setInterruptLine(bool enable, uint32_t line) {
         throw InitializationError("Invalid interrupt line");
     }
     spdlog::info("Raising interrupt on line {}, id {}", line, line);
-    struct kvm_irq_level level = {.irq = static_cast<__u32>((line)),
+    struct kvm_irq_level level = {.irq = static_cast<__u32>(line),
                                   .level = enable & 0x1};
     int res = ioctl(this->vmFd, KVM_IRQ_LINE, &level);
     spdlog::debug("OUT INTERRUPT thread, status={}", res);
@@ -198,9 +199,9 @@ void VirtualMachine::mmioOperation(bool isWrite, uint32_t phyAddress,
                                    uint32_t len, unsigned char* dataElements) {
     if (isWrite) {
         uint32_t data = getLittleEndianValue(len, dataElements);
-        this->mmu->dispatchMMIOWriteRequest(phyAddress, data, len);
+        this->mmio->dispatchWrite(phyAddress, data, len);
     } else {
-        auto x = this->mmu->dispatchMMIOReadRequest(phyAddress, len);
+        auto x = this->mmio->dispatchRead(phyAddress, len);
         setLittleEndianValue(len, dataElements, x);
     }
 }
