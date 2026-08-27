@@ -40,7 +40,6 @@ add_executable(advpi
     src/sdl/sdl2.cpp
     src/kvm/mmu.cpp
     src/kvm/mmio.cpp
-    src/gba/io/mmioHandler.cpp
     src/util/bios_loader.cpp
 )
 

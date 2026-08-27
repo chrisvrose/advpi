@@ -44,10 +44,12 @@ MMIOBusHandler::findMMIOHandlerForAlignedAddress(uint32_t startPosition) {
 }
 
 uint32_t MMIOBusHandler::dispatchRead(uint32_t guest_address, uint32_t len) {
-    throw "TODO";
+    auto handler = this->findMMIOHandlerForAlignedAddress(guest_address).value_or((this->fallbackHandler));
+    return handler->read(guest_address, len);
 }
 
 void MMIOBusHandler::dispatchWrite(uint32_t guest_address, uint32_t value,
                                    uint32_t len) {
-    spdlog::warn("TODO");
+    auto handler = this->findMMIOHandlerForAlignedAddress(guest_address).value_or((this->fallbackHandler));
+    handler->write(guest_address, value, len);
 }

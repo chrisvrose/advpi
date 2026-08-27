@@ -1,28 +1,26 @@
 
 #include "kvm/mmio.hpp"
 
-#include <iostream>
 #include <memory>
-#include <ostream>
 
 #include "gba/io/mmioHandler.hpp"
 #include "spdlog/spdlog.h"
 #include "util/runner.hh"
 
 class WrongMMIOHandler : public MMIOHandler {
-    uint32_t read(uint32_t readValue) { throw "Unexpected read"; }
-    void writeQuadWord(uint32_t readValue, uint32_t writeValue) {
+    uint32_t read(uint32_t readValue, uint8_t len) { throw "Unexpected read"; }
+    void write(uint32_t readValue, uint32_t writeValue, uint8_t len) {
         throw "Unexpected write";
     }
 };
 
 bool testRegisterCanFindFunction() {
     class MockMMIOHandler : public MMIOHandler {
-        uint32_t read(uint32_t readValue) {
+        uint32_t read(uint32_t readValue, uint8_t len) {
             if (readValue != 0) throw "Unexpected call address";
             return -25;
         }
-        void writeQuadWord(uint32_t readValue, uint32_t writeValue) {
+        void write(uint32_t readValue, uint32_t writeValue, uint8_t len) {
             throw "Woops! Why was this called";
         }
     };
@@ -37,7 +35,7 @@ bool testRegisterCanFindFunction() {
 
     auto found = busHandler.findMMIOHandlerForAlignedAddress(0);
 
-    return found->get()->read(0x0) == -25;
+    return found->get()->read(0x0,4) == -25;
 }
 
 

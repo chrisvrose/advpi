@@ -1,19 +1,28 @@
 #pragma once
 #include <cstdint>
+#include<spdlog/spdlog.h>
 
 /**
 Todo: Very approximate
 */
 class MMIOHandler {
    public:
-    virtual uint32_t read(uint32_t readValue) = 0;
-    virtual void writeQuadWord(uint32_t readValue, uint32_t writeValue) = 0;
+    virtual uint32_t read(uint32_t guestAddress, uint8_t len) = 0;
+    virtual void write(uint32_t guestAddress, uint32_t writeValue, uint8_t len) = 0;
 };
 
 class LoggingHandler : public MMIOHandler {
    public:
     // LoggingHandler(){}
     using MMIOHandler::MMIOHandler;
-    uint32_t read(uint32_t readValue) override;
-    void writeQuadWord(uint32_t readValue, uint32_t writeValue) override;
+    uint32_t read(uint32_t guestAddress,  uint8_t len) {
+        constexpr uint32_t readVal = 0;
+        spdlog::error("LoggingHandler :: Reading value 0x{} @ 0x{:x}", guestAddress,
+                      guestAddress);
+        return guestAddress;
+    };
+    void write(uint32_t guestAddress, uint32_t writeValue,  uint8_t len) {
+        spdlog::error("LoggingHandler :: Writing value 0x{:x} @ {:x}", writeValue,
+                      guestAddress);
+    };
 };
