@@ -53,9 +53,13 @@ int main(int argc, char**) {
 
     std::unique_ptr<GBAMemoryMapper> mem =
         std::make_unique<GBAMemoryMapper>(configProvider);
-    std::shared_ptr<MMIOBusHandler> mmioBusHandler;
+    std::shared_ptr<MMIOBusHandler> mmioBusHandler = std::make_shared<MMIOBusHandler>();
     VirtualMachine vm(std::move(mem), std::move(mmioBusHandler),
-                      ONBOARD_MEM_START);
+                      0x0);
+    spdlog::info("Creating mem map");
+
+
+    spdlog::info("Intialized GBA");
 
     vm.startLoop(5);
 

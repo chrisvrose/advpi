@@ -4,11 +4,9 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <gba_memory.hpp>
-#include <iostream>
 #include "kvm/mmu.hpp"
 /*
 Memory map
@@ -70,6 +68,7 @@ GBAMemoryMapper::GBAMemoryMapper(std::shared_ptr<AppConfigProvider> configProvid
         mmap(NULL, BIOS_SIZE, PROT_READ | PROT_EXEC, MAP_SHARED, biosFd, 0);
 
     if (biosRom == MAP_FAILED) {
+        spdlog::warn("Map failed!");
         throw InitializationError("bios mmap failed");
     }
 

@@ -161,7 +161,7 @@ void VirtualMachine::startLoop(std::optional<int> numLoops) {
                     break;
                 case KVM_EXIT_MMIO: {
                     const bool isWrite = vcpuKvmRun->mmio.is_write;
-                    spdlog::trace("Attempted MMIO");
+                    spdlog::trace("Attempted MMIO isWrite={}",isWrite);
 
                     this->mmioOperation(
                         vcpuKvmRun->mmio.is_write, vcpuKvmRun->mmio.phys_addr,
