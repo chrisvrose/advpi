@@ -30,7 +30,3 @@ str r1, [r5]
 .endr
 
 .short 0x5a2b
-
-.rept 212
-NOP
-.endr

@@ -56,9 +56,6 @@ int main(int argc, char**) {
     std::shared_ptr<MMIOBusHandler> mmioBusHandler = std::make_shared<MMIOBusHandler>();
     VirtualMachine vm(std::move(mem), std::move(mmioBusHandler),
                       0x0);
-    spdlog::info("Creating mem map");
-
-
     spdlog::info("Intialized GBA");
 
     vm.startLoop(5);
