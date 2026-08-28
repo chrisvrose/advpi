@@ -6,7 +6,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <gba_memory.hpp>
+#include <gba/memory_map.hpp>
 #include "kvm/mmu.hpp"
 /*
 Memory map

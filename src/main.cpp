@@ -4,7 +4,7 @@
 #include <linux/kvm.h>
 #include <unistd.h>
 // #include <SDL2/SDL.h>
-#include <gba_memory.hpp>
+#include <gba/memory_map.hpp>
 #include <kvm/mmio.hpp>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
