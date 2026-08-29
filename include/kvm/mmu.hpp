@@ -3,7 +3,6 @@
 #include<stdint.h>
 #include<linux/kvm.h>
 #include<map>
-#include <optional>
 
 #include<gba/io/mmioHandler.hpp>
 #include "util/memory.hpp"

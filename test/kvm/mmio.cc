@@ -80,5 +80,5 @@ void testRegisterReturnsEmpty() {
 
 int main() {
     spdlog::info("Started tests");
-    return runTests({testRegisterCanFindFunction,testRegisterReturnsHandlerThatIsWithinRange,testRegisterReturnsEmptyWhenOutOfRange,testRegisterReturnsEmpty}) == 0;
+    return runTests({testRegisterCanFindFunction,testRegisterReturnsHandlerThatIsWithinRange,testRegisterReturnsEmptyWhenOutOfRange,testRegisterReturnsEmpty});
 }

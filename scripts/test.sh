@@ -8,6 +8,7 @@ REMOTE_DIR="${REMOTE_DIR:-~/advpi-build}"
 TESTS=(
     endian_test
     mmio_test
+    timer_test
 )
 
 # Build only the test targets

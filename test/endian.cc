@@ -1,5 +1,4 @@
 #include <functional>
-#include <iostream>
 #include <util/byte.hpp>
 #include <util/runner.hh>
 

@@ -34,6 +34,7 @@ include_directories(include)
 add_executable(advpi
     src/main.cpp
     src/gba/memory_map.cpp
+    src/gba/io/timerHandler.cc
     src/kvm/virtual_machine.cpp
     src/kvm/vcpu.cpp
     src/gba/cart.cpp
@@ -54,11 +55,17 @@ spdlog::spdlog
 
 add_executable(endian_test test/endian.cc test/util/runner.cc)
 add_executable(mmio_test test/kvm/mmio.cc test/util/runner.cc src/kvm/mmio.cpp)
+add_executable(timer_test
+  test/gba/io/timer.cc
+  test/util/runner.cc
+  src/gba/io/timerHandler.cc
+)
 
 
 
 target_include_directories(endian_test PRIVATE test/include)
 target_include_directories(mmio_test PRIVATE test/include)
+target_include_directories(timer_test PRIVATE test/include)
 
 
 
@@ -70,4 +77,9 @@ add_test(
   NAME mmio_test
   COMMAND $<TARGET_FILE:mmio_test>
 )
+add_test(
+  NAME timer_test
+  COMMAND $<TARGET_FILE:timer_test>
+)
 target_link_libraries(mmio_test PRIVATE spdlog::spdlog)
+target_link_libraries(timer_test PRIVATE spdlog::spdlog)
