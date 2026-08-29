@@ -1,3 +1,4 @@
+#pragma once
 #include <climits>
 #include <cstdint>
 #include <cstring>
@@ -9,6 +10,11 @@ inline uint32_t show_little_endian_byte(const unsigned char data[4]){
     return *(uint32_t*)((void*)data);
 }
 
+inline uint32_t join_uint_16s(const uint16_t lower, const uint16_t upper){
+    uint32_t t;
+    t = lower | (upper<<16);
+    return t;
+}
 
 /**
  * Set Little endian value for given len.

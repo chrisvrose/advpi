@@ -20,8 +20,6 @@ void getsCorrectTimer(){
     uint32_t id1 = handler.get_timer_id(0x4000104);
     assert_eq(1, id1);
 
-
-
     uint32_t id2 = handler.get_timer_id(0x4000108);
     assert_eq(2, id2);
 
