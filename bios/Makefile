@@ -1,4 +1,4 @@
-SOURCES  := custom_bios.S one.S simple.S oneins.S
+SOURCES  := arm_init.S one.S
 OBJECTS  := $(SOURCES:.S=.o)
 ELF_OUTPUTS := $(SOURCES:.S=.elf32)
 OUTPUTS  := $(SOURCES:.S=.bin)
