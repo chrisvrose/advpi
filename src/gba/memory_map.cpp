@@ -84,18 +84,19 @@ void GBAMemoryMapper::_debug_memory(void* memory, int size) {
 }
 
 void GBAMemoryMapper::mapToVM(std::shared_ptr<MemoryManager> mmu) {
+    struct MemorySegmentRequest biosMemAllocationRequest = {
+        .readOnly = true,
+        .virtualMemoryStart=BIOS_START,
+        .virtualMemoryLength=BIOS_SIZE,
+    };
+    mmu->registerMemoryPage(biosMemAllocationRequest, this->bios, "BIOS");
+
     struct MemorySegmentRequest onboardMemoryAllocationRequest = {
         .readOnly = false,
         .virtualMemoryStart=ONBOARD_MEM_START,
         .virtualMemoryLength=ONBOARD_MEM_SIZE
     } ;
     mmu->registerMemoryPage(onboardMemoryAllocationRequest,"Onboard Memory");
-    struct MemorySegmentRequest bioSMemAllocationRequest = {
-        .readOnly = true,
-        .virtualMemoryStart=BIOS_START,
-        .virtualMemoryLength=BIOS_SIZE,
-    };
-    mmu->registerMemoryPage(bioSMemAllocationRequest, this->bios, "BIOS");
 
     struct MemorySegmentRequest onchipMemAllocationRequest = {
         .readOnly = false,

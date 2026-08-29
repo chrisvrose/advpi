@@ -7,6 +7,7 @@
 #include <cstring>
 #include <exceptions/initialization_error.hpp>
 #include <kvm/mmu.hpp>
+#include <stdexcept>
 #include <string>
 
 MemoryManager::MemoryManager(int vmFd) { this->vmFd = vmFd; }
@@ -52,7 +53,7 @@ void MemoryManager::mapToVM(unsigned short slot, MemorySegmentRequest& request,
                         void* initializedMemory, const char* memorySegmentName) {
 
     if(this->segmentPositions.count(slot)>0){
-        throw InitializationError("Slot already filled!");
+        throw InvalidConfigurationError("Slot already filled!");
     }
     struct kvm_userspace_memory_region memory_region = {
         .slot = slot,
@@ -74,12 +75,12 @@ void MemoryManager::mapToVM(unsigned short slot, MemorySegmentRequest& request,
 
 void MemoryManager::_debug_writeToMemoryAtSlot(int slot, void* code, int length){
     if(this->segmentPositions.count(slot)!=1){
-        throw InitializationError("DebugError: Expected slot for writing to");
+        throw InvalidConfigurationError("DebugError: Expected slot for writing to");
     }
     auto segment = this->segmentPositions[slot];
     int l = segment.memory_size;
     if(l<length){
-        throw InitializationError("Cannot copy as too large");
+        throw std::runtime_error("Cannot copy as too large");
     }
     spdlog::debug("Write to slot={} @ {:x}: Start",slot, segment.userspace_addr);
     std::memcpy((void*)segment.userspace_addr,code, length);

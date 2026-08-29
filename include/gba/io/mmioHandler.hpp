@@ -18,12 +18,12 @@ class LoggingHandler : public MMIOHandler {
     using MMIOHandler::MMIOHandler;
     uint32_t read(uint32_t guestAddress, uint8_t len) {
         constexpr uint32_t readVal = 0;
-        spdlog::error("LoggingHandler :: Reading value 0x{:x} @ 0x{:x}",
+        spdlog::warn("LoggingHandler :: Reading value 0x{:x} @ 0x{:x}",
                       guestAddress, guestAddress);
         return guestAddress;
     };
     void write(uint32_t guestAddress, uint32_t writeValue, uint8_t len) {
-        spdlog::error("LoggingHandler :: Writing value 0x{:x} @ {:x}",
+        spdlog::warn("LoggingHandler :: Writing value 0x{:x} @ {:x}",
                       writeValue, guestAddress);
     };
 };
