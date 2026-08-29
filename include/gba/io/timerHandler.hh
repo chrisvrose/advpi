@@ -6,6 +6,12 @@
 struct Timer{
     uint16_t timer;
     uint16_t reloadAmount;
+    uint8_t prescalar;
+    uint8_t countUpCascade;// 1 if following
+    uint8_t timerIrqState; // 0 disable, 1 enable on overflow
+    uint8_t timerState; //0 - stop, 1 - start
+
+    uint16_t getControlStateRepresentation();
 };
 
 extern uint32_t TIMER_BASE_HANDLE;

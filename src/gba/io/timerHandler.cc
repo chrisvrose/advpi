@@ -5,6 +5,11 @@
 
 uint32_t TIMER_BASE_HANDLE = 0x4000100u;
 
+uint16_t Timer::getControlStateRepresentation() {
+    return (prescalar & 0b11) | ((countUpCascade & 0b1) << 2) |
+           ((timerIrqState & 0b1) << 6) | ((timerState & 0b1) << 7);
+}
+
 uint8_t TimerIOHandler::get_timer_id(uint32_t ga) const {
     return (ga - TIMER_BASE_HANDLE) / 4;
 }
@@ -15,6 +20,10 @@ uint8_t TimerIOHandler::get_timer_offset(uint32_t ga) const {
 
 uint16_t TimerIOHandler::dispatchTimerRead(uint8_t id) {
     return this->timers[id].timer;
+}
+
+uint16_t TimerIOHandler::dispatchTimerControlRead(uint8_t id) {
+    return this->timers[id].getControlStateRepresentation();
 }
 
 uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
