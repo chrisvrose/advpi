@@ -8,11 +8,14 @@
 inline uint32_t show_little_endian_byte(const unsigned char data[4]){
     return *(uint32_t*)((void*)data);
 }
+
+
 /**
  * Set Little endian value for given len.
+ * Assumes host is Little endian (which it is)
  */
-inline void setLittleEndianValue(int len, unsigned char* dataElements,uint32_t value){
-    std::memcpy(dataElements, ((char*)&value)+(sizeof(uint32_t)-len),len);
+inline void setLittleEndianValue(uint32_t len, unsigned char* dataElements,uint32_t value){
+    std::memcpy(dataElements, (char*)&value,len);
 }
 
 /**

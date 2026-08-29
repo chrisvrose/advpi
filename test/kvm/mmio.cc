@@ -14,7 +14,7 @@ class WrongMMIOHandler : public MMIOHandler {
     }
 };
 
-bool testRegisterCanFindFunction() {
+void testRegisterCanFindFunction() {
     class MockMMIOHandler : public MMIOHandler {
         uint32_t read(uint32_t readValue, uint8_t len) {
             if (readValue != 0) throw "Unexpected call address";
@@ -35,11 +35,11 @@ bool testRegisterCanFindFunction() {
 
     auto found = busHandler.findMMIOHandlerForAlignedAddress(0);
 
-    return found->get()->read(0x0,4) == -25;
+    assert_eq(-25, found->get()->read(0x0,4));
 }
 
 
-bool testRegisterReturnsHandlerThatIsWithinRange() {
+void testRegisterReturnsHandlerThatIsWithinRange() {
     MemorySegmentHandler map1{.start = 0x1000,
                         .length = 0x1000,
                         .handler = std::make_shared<WrongMMIOHandler>()};
@@ -47,10 +47,10 @@ bool testRegisterReturnsHandlerThatIsWithinRange() {
     busHandler.registerMem({map1});
 
     auto found = busHandler.findMMIOHandlerForAlignedAddress(0x1002);
-    return found.has_value();
+    assert_true( found.has_value());
 }
 
-bool testRegisterReturnsEmptyWhenOutOfRange() {
+void testRegisterReturnsEmptyWhenOutOfRange() {
     MemorySegmentHandler map1{.start = 0x0,
                         .length = 0x1000,
                         .handler = std::make_shared<WrongMMIOHandler>()};
@@ -62,11 +62,11 @@ bool testRegisterReturnsEmptyWhenOutOfRange() {
     busHandler.registerMem({map1,map2});
 
     auto found = busHandler.findMMIOHandlerForAlignedAddress(0x1001);
-    return found.has_value()==false;
+    assert_eq(false, found.has_value());
 }
 
 
-bool testRegisterReturnsEmpty() {
+void testRegisterReturnsEmpty() {
     MemorySegmentHandler map1{.start = 0x0,
                         .length = 0x1000,
                         .handler = std::make_shared<WrongMMIOHandler>()};
@@ -74,7 +74,7 @@ bool testRegisterReturnsEmpty() {
     busHandler.registerMem({map1});
 
     auto found = busHandler.findMMIOHandlerForAlignedAddress(0x3000);
-    return found.has_value()==false;
+    assert_eq(false, found.has_value());
 }
 
 

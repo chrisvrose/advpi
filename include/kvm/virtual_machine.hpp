@@ -33,8 +33,6 @@ class VirtualMachine {
 
    public:
     void startLoop(std::optional<int> numLoops = std::nullopt);
-    /// Only for debugging. Not for actual use
-    void _debugSetOnBoardRamSegmentBytes(void* code, size_t codeLen);
     /// Print out register state
     void _debugPrintRegisters();
     VirtualMachine(std::unique_ptr<GBAMemoryMapper>,

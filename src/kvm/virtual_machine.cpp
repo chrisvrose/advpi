@@ -5,10 +5,13 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <exceptions/initialization_error.hpp>
+#include <format>
 #include <gba/io/mmioHandler.hpp>
 #include <kvm/virtual_machine.hpp>
 #include <memory>
+#include <stdexcept>
 #include <thread>
 #include <util/byte.hpp>
 
@@ -64,10 +67,6 @@ void VirtualMachine::_debugPrintRegisters() {
         spdlog::info("Register({:x}={:x})", i, this->cpu->getRegisterValue(i));
     }
 }
-void VirtualMachine::_debugSetOnBoardRamSegmentBytes(void* code,
-                                                     size_t codeLen) {
-    this->mmu->_debug_writeToMemoryAtSlot(0, code, codeLen);
-}
 
 void VirtualMachine::assertKvmExtension(int capability,
                                         const char* capabilityName) {
@@ -115,9 +114,10 @@ void VirtualMachine::enableCapability(uint32_t capability) {
 void VirtualMachine::startLoop(std::optional<int> numLoops) {
     int counts = -1;
     bool loopingCpu = true;
+    std::atomic_bool running = true;
     std::thread exampleTimerThread([&]() {
         int count = 0;
-        while ((count++) != 4) {
+        while ((count++) != 4 && running) {
             sleep(4);
             this->setInterruptLine(true);
             usleep(100);
@@ -178,15 +178,17 @@ void VirtualMachine::startLoop(std::optional<int> numLoops) {
                 default:
                     spdlog::warn("Unmanaged exit with code {}",
                                  vcpuKvmRun->exit_reason);
+                    throw std::runtime_error(std::format("Exit with error code {}",vcpuKvmRun->exit_reason));
             }
         }
     }
+    running = false;
     exampleTimerThread.join();
 }
 
 void VirtualMachine::setInterruptLine(bool enable, uint32_t line) {
     if (line >= 16) {
-        throw InitializationError("Invalid interrupt line");
+        throw InvalidConfigurationError("Invalid interrupt line");
     }
     spdlog::info("Raising interrupt on line {}, id {}", line, line);
     struct kvm_irq_level level = {.irq = static_cast<__u32>(line),

@@ -33,7 +33,7 @@ include_directories(include)
 
 add_executable(advpi
     src/main.cpp
-    src/gba_memory.cpp
+    src/gba/memory_map.cpp
     src/kvm/virtual_machine.cpp
     src/kvm/vcpu.cpp
     src/gba/cart.cpp
