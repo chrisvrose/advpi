@@ -1,8 +1,18 @@
-
-
-
 #include "gba/io/timerHandler.hh"
 #include <util/runner.hh>
+
+void testTimerRepresentation(){
+    Timer t1;
+    t1.prescalar = 2;
+    assert_eq(0x2,t1.getControlStateRepresentation());
+    t1.countUpCascade = 1;
+    assert_eq(0b00110,t1.getControlStateRepresentation());
+    t1.timerIrqState = 1;
+    assert_eq(0b01000110,t1.getControlStateRepresentation());
+    t1.timerState = 1;
+    assert_eq(0b11000110,t1.getControlStateRepresentation());
+}
+
 
 void initTimerWorks(){
    TimerIOHandler handler;
@@ -32,5 +42,5 @@ void getsCorrectTimer(){
 #include "util/runner.hh"
 int main(){
     spdlog::info("Timer tests");
-    runTests({initTimerWorks,getsCorrectTimer});
+    runTests({testTimerRepresentation,initTimerWorks,getsCorrectTimer});
 }

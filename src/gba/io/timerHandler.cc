@@ -32,8 +32,10 @@ uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
     switch (len) {
         case 4: {
             // split into two
-            uint32_t first_half = this->read(address, 2);       // lower
-            uint32_t second_half = this->read(address + 2, 2);  // upper
+            // uint32_t first_half = this->read(address, 2);       // lower
+            // uint32_t second_half = this->read(address + 2, 2);  // upper
+            uint16_t first_half = dispatchTimerRead(reg_id);
+            uint16_t second_half = dispatchTimerControlRead(reg_id);
             return join_uint_16s(first_half, second_half);
         }
         case 2: {
@@ -50,5 +52,22 @@ uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
 }
 
 void TimerIOHandler::write(uint32_t address, uint32_t writeValue, uint8_t len) {
+    uint reg_id = get_timer_id(address), reg_offset = get_timer_offset(address);
 
+    switch (len) {
+        case 4: {
+            // split into two
+            this->write(address, writeValue& 0xffff, 2);       // lower
+            this->write(address + 2, writeValue>>16, 2);  // upper
+        }
+        case 2: {
+            if (reg_offset == 0) {
+                // dispatchTimerRead(reg_id);
+            } else if (reg_offset == 2) {
+                // return dispatchTimerControlRead(reg_id);
+            }
+        }
+        default:
+            spdlog::error("I haven't implemented this yet");
+    }
 }
