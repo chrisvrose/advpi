@@ -37,6 +37,7 @@ uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
             uint16_t first_half = dispatchTimerRead(reg_id);
             uint16_t second_half = dispatchTimerControlRead(reg_id);
             return join_uint_16s(first_half, second_half);
+            break;
         }
         case 2: {
             if (reg_offset == 0) {
@@ -44,6 +45,7 @@ uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
             } else if (reg_offset == 2) {
                 return dispatchTimerControlRead(reg_id);
             }
+            break;
         }
         default:
             spdlog::error("I haven't implemented this yet");
@@ -53,21 +55,30 @@ uint32_t TimerIOHandler::read(uint32_t address, uint8_t len) {
 
 void TimerIOHandler::write(uint32_t address, uint32_t writeValue, uint8_t len) {
     uint reg_id = get_timer_id(address), reg_offset = get_timer_offset(address);
-
+    spdlog::info("Writing @{:x} value 0x{:x}, len={}",address,writeValue, len);
     switch (len) {
         case 4: {
             // split into two
-            this->write(address, writeValue& 0xffff, 2);       // lower
-            this->write(address + 2, writeValue>>16, 2);  // upper
+            this->write(address, writeValue & 0xffff, 2);   // lower
+            this->write(address + 2, writeValue >> 16, 2);  // upper
+            break;
         }
         case 2: {
             if (reg_offset == 0) {
                 // dispatchTimerRead(reg_id);
+                dispatchTimerReloadWrite(reg_id, (uint16_t)writeValue);
             } else if (reg_offset == 2) {
                 // return dispatchTimerControlRead(reg_id);
+                spdlog::error("I haven't implemented this yet");
             }
+            break;
         }
         default:
             spdlog::error("I haven't implemented this yet");
     }
+}
+
+void TimerIOHandler::dispatchTimerReloadWrite(uint8_t timer_id,
+                                              uint16_t value) {
+    timers[timer_id].reloadAmount = value;
 }
